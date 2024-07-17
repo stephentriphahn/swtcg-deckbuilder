@@ -12,8 +12,7 @@
   (context "/api/v1" []
 
     (GET "/cards" {params :params}
-      (handlers/list-cards params))
-    (route/resources "/")))
+      (handlers/list-cards params))))
 
 (defn wrap-internal-error
   [handler]
@@ -25,7 +24,7 @@
         {:status 500 :body "Internal server error"}))))
 
 (def app
-  (let [rs (routes #'card-routes (route/not-found "not found"))]
+  (let [rs (routes #'card-routes (route/resources "/") (route/not-found "not found"))]
     (-> rs
         kw-params/wrap-keyword-params
         nested/wrap-nested-params
