@@ -41,7 +41,7 @@
   (with-open [rdr (io/reader path)]
     (let [[fields & r] (line-seq rdr)
           headers (create-headers fields)
-          cards (doall (map #(row->card headers %) r))]
+          cards (mapv #(row->card headers %) r)]
       (swap! db concat cards))))
 
 (def kw-to-comparator {:lt < :gt > :lte <= :gte >=})
