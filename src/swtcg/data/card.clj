@@ -32,9 +32,13 @@
   [number-fields card]
   (reduce #(update %1 %2 normalize-int) card number-fields))
 
+(defn add-id
+  [{:keys [set number] :as row}]
+  (assoc row :id (str set number)))
+
 (defn- row->card
   [headers row]
-  (->> row split-tab (zipmap headers) (parse-int-fields num-fields)))
+  (->> row split-tab (zipmap headers) (parse-int-fields num-fields) add-id))
 
 (defn- load-file!
   [path]
@@ -44,7 +48,7 @@
           cards (mapv #(row->card headers %) r)]
       (swap! db concat cards))))
 
-(def kw-to-comparator {:lt < :gt > :lte <= :gte >=})
+(def kw-to-comparator {:eq = :ne (complement =) :lt < :gt > :lte <= :gte >=})
 
 (defn- comparator-filter
   [field m]
@@ -81,14 +85,15 @@
 (defmulti connect #(first (clojure.string/split % #"://")))
 
 (defmethod connect "memory"
-  [connect-protocol]
+  [connect-string]
   (new-memory-db))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; development
 
 (comment
+  (reset! db [])
   (run! load-file! [aotc-file anh-file]) ;; pre-load data
-  (def test-params {:speed {:gt 50} :cost {:lte 5}})
+  (def test-params {:speed {:gt 50} :side {:ne "N"} :cost {:lte 5}})
   (filter (build-filter-fn test-params) @db)
   #_())
