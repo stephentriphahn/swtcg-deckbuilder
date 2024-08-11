@@ -32,13 +32,15 @@
   [number-fields card]
   (reduce #(update %1 %2 normalize-int) card number-fields))
 
-(defn add-id
+(defn normalize
   [{:keys [set number] :as row}]
-  (assoc row :id (str set number)))
+  (-> row
+      (assoc :id (str set number))
+      (update :type (comp keyword str/lower-case))))
 
 (defn- row->card
   [headers row]
-  (->> row split-tab (zipmap headers) (parse-int-fields num-fields) add-id))
+  (->> row split-tab (zipmap headers) (parse-int-fields num-fields) normalize))
 
 (defn- load-file!
   [path]
@@ -96,4 +98,5 @@
   (run! load-file! [aotc-file anh-file]) ;; pre-load data
   (def test-params {:speed {:gt 50} :side {:ne "N"} :cost {:lte 5}})
   (filter (build-filter-fn test-params) @db)
+  (gensym)
   #_())
