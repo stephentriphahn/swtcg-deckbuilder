@@ -19,9 +19,8 @@
   (into {} (map parse-int params)))
 
 (defn list-cards
-  [opts]
-  (let [db (card/connect "memory://foo")]
-    (response/response {:cards (card/list-all db (normalize-opts opts))})))
+  [{:keys [db params]}]
+  (response/response {:cards (card/list-all db (normalize-opts params))}))
 
 (comment
   (normalize-params {:foo "2" :bar {:gte "3"}})

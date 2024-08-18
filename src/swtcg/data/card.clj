@@ -9,6 +9,11 @@
 
 (defonce db (atom []))
 
+(defn create-path
+  [set-name]
+  (str "/Users/stephentriphahn/development/SWTCG-LACKEY/starwars/sets/" set-name ".txt"))
+
+(def sets-to-load #{"AOTC" "SR" "BOY" "ANH" "ESB" "ROTS" "ROTJ" "PM" "RAS"})
 (def aotc-file "/Users/stephentriphahn/development/SWTCG-LACKEY/starwars/sets/AOTC.txt")
 (def anh-file "/Users/stephentriphahn/development/SWTCG-LACKEY/starwars/sets/ANH.txt")
 
@@ -26,7 +31,10 @@
 (defn normalize-int
   [x]
   (when-not (str/blank? x)
-    (Integer/parseInt x)))
+    (try
+      (Integer/parseInt x)
+      (catch Exception e
+        (println (.getMessage e))))))
 
 (defn parse-int-fields
   [number-fields card]
@@ -95,7 +103,7 @@
 
 (comment
   (reset! db [])
-  (run! load-file! [aotc-file anh-file]) ;; pre-load data
+  (run! load-file! (map create-path sets-to-load)) ;; pre-load data
   (def test-params {:speed {:gt 50} :side {:ne "N"} :cost {:lte 5}})
   (filter (build-filter-fn test-params) @db)
   (gensym)

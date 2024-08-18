@@ -1,36 +1,49 @@
 (ns swtcg.web.routes
-  (:require  [compojure.core :refer [context defroutes GET routes]]
-             [compojure.route :as route]
-             [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
-             [ring.middleware.json :as json]
-             [ring.middleware.nested-params :as nested]
-             [ring.middleware.keyword-params :as kw-params]
-             [ring.middleware.resource :refer [wrap-resource]]
-             [swtcg.web.handlers :as handlers]))
+  (:require [reitit.core :as reitit]
+            [reitit.ring :as ring]
+            [reitit.swagger :as swagger]
+            [reitit.swagger-ui :as swagger-ui]
+            [reitit.ring.middleware.muuntaja :as muuntaja]
+            [ring.middleware.nested-params :as nested]
+            [ring.middleware.keyword-params :as kw-params]
+            [reitit.ring.middleware.parameters :as param-mw]
+            [muuntaja.core :as m]
+            [swtcg.web.handlers :as handlers]
+            [swtcg.web.middleware :as mw]
+            [ring.adapter.jetty :as jetty]))
 
-(defroutes card-routes
-  (context "/api/v1" []
+(def routes
+  [["/heartbeat"
+    {:get (fn [req] {:status 200 :body "ok"})}]
+   ["/swagger.json"
+    {:get {:no-doc true
+           :handler (swagger/create-swagger-handler)}}]
+   ["/api/v1"
+    ["/cards" {:name ::cards
+               :swagger {:tags ["cards"]}}
+     [""
+      {:get {:summary "list all cards in the system"
+             :handler handlers/list-cards}}]]]])
 
-    (GET "/cards" {params :params}
-      (handlers/list-cards params))))
+(defn app [db]
+  (ring/ring-handler
+   (ring/router routes
+                {:data {:db db
+                        :muuntaja m/instance
+                        :middleware [swagger/swagger-feature
+                                     muuntaja/format-middleware
+                                     param-mw/parameters-middleware
+                                     mw/nested-params
+                                     mw/keyword-params
+                                     mw/add-db]}})
 
-(defn wrap-internal-error
-  [handler]
-  (fn [req]
-    (try
-      (handler req)
-      (catch Throwable t
-        (println (.getMessage t))
-        {:status 500 :body "Internal server error"}))))
-
-(def app
-  (let [rs (routes #'card-routes (route/resources "/") (route/not-found "not found"))]
-    (-> rs
-        kw-params/wrap-keyword-params
-        nested/wrap-nested-params
-        (wrap-defaults site-defaults)
-        json/wrap-json-response
-        wrap-internal-error)))
+   (ring/routes
+    (swagger-ui/create-swagger-ui-handler
+     {:path "/docs"})
+    (ring/create-file-handler {:path "/" :root "resources"})
+    (ring/create-default-handler))))
 
 (comment
+  (def server (start))
+  (.stop server)
   #_())
