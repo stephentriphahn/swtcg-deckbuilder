@@ -20,7 +20,8 @@
 
 (defn list-cards
   [{:keys [db params]}]
-  (response/response {:cards (card/list-all db (normalize-opts params))}))
+  (let [card-repo (:card-repo db)]
+    (response/response {:cards (card/list-all db (normalize-opts params))})))
 
 (comment
   (normalize-params {:foo "2" :bar {:gte "3"}})
