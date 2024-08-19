@@ -45,15 +45,16 @@
 
 (defn- row->card
   [headers row]
-  (->> row split-tab (zipmap headers) (parse-int-fields card/num-fields) normalize))
+  (let [card (->> row split-tab (zipmap headers) (parse-int-fields card/num-fields) normalize)]
+    [(:id card) card]))
 
 (defn- load-file!
   [db path]
   (with-open [rdr (io/reader path)]
     (let [[fields & r] (line-seq rdr)
           headers (create-headers fields)
-          cards (mapv #(row->card headers %) r)]
-      (swap! db concat cards))))
+          cards (into {} (mapv #(row->card headers %) r))]
+      (swap! db update :cards merge cards))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;  databse connections
@@ -66,3 +67,10 @@
 (defmethod connect "memory"
   [connect-string]
   {:card-repo (card/new-memory-repo memory-db)})
+
+(comment
+  (def test-db (atom {:cards {} :decks {}}))
+  (reset! test-db {:cards {} :decks {}})
+  (run! (partial load-file! memory-db) (map create-path sets-to-load))
+  @test-db
+  #_())

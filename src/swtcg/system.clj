@@ -2,7 +2,7 @@
   (:require [integrant.core :as integrant]
             [ring.adapter.jetty :as jetty]
             [swtcg.web.routes :as routes]
-            [swtcg.data.card :as card]))
+            [swtcg.data.core :as data]))
 
 (def config {::app {:db (integrant/ref ::db)}
              ::db {:conn-str "memory://"}
@@ -20,7 +20,7 @@
 
 (defmethod integrant/init-key ::db
   [_ {:keys [conn-str]}]
-  (card/connect conn-str))
+  (data/connect conn-str))
 
 (defmethod integrant/halt-key! ::server
   [_ server]

@@ -1,5 +1,6 @@
 (ns swtcg.web.handlers
-  (:require [swtcg.data.card :as card]
+  (:require [swtcg.data.protocols :as protocols]
+            [swtcg.data.card :as card]
             [ring.util.response :as response]))
 
 (defn parse
@@ -21,7 +22,7 @@
 (defn list-cards
   [{:keys [db params]}]
   (let [card-repo (:card-repo db)]
-    (response/response {:cards (card/list-all db (normalize-opts params))})))
+    (response/response {:cards (protocols/list-all card-repo (normalize-opts params))})))
 
 (comment
   (normalize-params {:foo "2" :bar {:gte "3"}})
