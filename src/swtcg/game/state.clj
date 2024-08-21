@@ -49,7 +49,7 @@
 
 (defn hand->build-zone
   [state player card-sid]
-  (move-card state player :hand :build-zone card-sid add-build-status))
+  (move-card state player :hand :build-zone card-sid add-status))
 
 (defn get-arena-type
   [card]
@@ -57,7 +57,7 @@
 
 (defn build-zone->arena
   [state player card-sid]
-  (let [arena-type (-> player :build-zone card-sid get-arena-type)]
+  (let [arena-type (-> state player :build-zone card-sid get-arena-type)]
     (move-card state player :build-zone arena-type card-sid)))
 
 (defn change-force
