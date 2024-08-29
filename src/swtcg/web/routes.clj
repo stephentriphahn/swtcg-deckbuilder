@@ -23,7 +23,11 @@
                :swagger {:tags ["cards"]}}
      [""
       {:get {:summary "list all cards in the system"
-             :handler handlers/list-cards}}]]]])
+             :handler handlers/list-cards}}]
+     ["/:id" {:name ::card-by-id}
+      ["" {:get {:summary "get a card by id"
+                 :parameters {:path {:id string?}}
+                 :handler handlers/get-card-by-id}}]]]]])
 
 (defn app [db]
   (ring/ring-handler

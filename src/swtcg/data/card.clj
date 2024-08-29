@@ -7,15 +7,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; memory impl helpers
 
-(defonce db (atom []))
+(defonce db (atom {}))
 
 (defn create-path
   [set-name]
   (str "/Users/stephentriphahn/development/SWTCG-LACKEY/starwars/sets/" set-name ".txt"))
 
 (def sets-to-load #{"AOTC" "SR" "BOY" "ANH" "ESB" "ROTS" "ROTJ" "PM" "RAS"})
-(def aotc-file "/Users/stephentriphahn/development/SWTCG-LACKEY/starwars/sets/AOTC.txt")
-(def anh-file "/Users/stephentriphahn/development/SWTCG-LACKEY/starwars/sets/ANH.txt")
 
 (defn split-tab
   [header-string]
@@ -40,23 +38,29 @@
   [number-fields card]
   (reduce #(update %1 %2 normalize-int) card number-fields))
 
+(defn build-image-path
+  [image-name set-name]
+  (str "/public/setimages/" set-name "/" image-name ".jpg"))
+
 (defn normalize
   [{:keys [set number] :as row}]
   (-> row
       (assoc :id (str set number))
-      (update :type (comp keyword str/lower-case))))
+      (update :type (comp keyword str/lower-case))
+      (update :imagefile build-image-path (:set row))))
 
 (defn- row->card
   [headers row]
-  (->> row split-tab (zipmap headers) (parse-int-fields num-fields) normalize))
+  (let [card (->> row split-tab (zipmap headers) (parse-int-fields num-fields) normalize)]
+    (vector (:id card) card)))
 
 (defn- load-file!
   [path]
   (with-open [rdr (io/reader path)]
     (let [[fields & r] (line-seq rdr)
           headers (create-headers fields)
-          cards (mapv #(row->card headers %) r)]
-      (swap! db concat cards))))
+          cards (into {} (mapv #(row->card headers %) r))]
+      (swap! db update :cards merge cards))))
 
 (def kw-to-comparator {:eq = :ne (complement =) :lt < :gt > :lte <= :gte >=})
 
@@ -81,16 +85,21 @@
 ;;; connect and memory implementation
 
 (defprotocol CardDatabase
-  (list-all [this opts]))
+  (list-all [this opts])
+  (get-by-id [this id]))
 
 (defn new-memory-db
   []
   (reify CardDatabase
+    (get-by-id [_ id]
+      (-> @db :cards (get id)))
     (list-all [_ opts]
-      (let [filter-opts (dissoc opts :skip :limit)]
-        (cond->> @db
+      (let [filter-opts (dissoc opts :skip :limit)
+            cards-vec (-> @db :cards vals)]
+        (cond->> cards-vec
           (not-empty filter-opts) (filter (build-filter-fn filter-opts))
-          (:limit opts) (take (:limit opts)))))))
+          (:limit opts) (take (:limit opts))
+          :always (map #(select-keys % [:id :imagefile :name])))))))
 
 (defmulti connect #(first (clojure.string/split % #"://")))
 
@@ -102,9 +111,10 @@
 ;;; development
 
 (comment
-  (reset! db [])
+  (reset! db {})
   (run! load-file! (map create-path sets-to-load)) ;; pre-load data
   (def test-params {:speed {:gt 50} :side {:ne "N"} :cost {:lte 5}})
+  @db
   (filter (build-filter-fn test-params) @db)
-  (gensym)
+  (into {} [[:foo "bar"]])
   #_())

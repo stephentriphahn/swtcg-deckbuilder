@@ -22,6 +22,11 @@
   [{:keys [db params]}]
   (response/response {:cards (card/list-all db (normalize-opts params))}))
 
+(defn get-card-by-id
+  [{:keys [db path-params]}]
+  (let [id (get-in path-params [:id])]
+    (response/response (card/get-by-id db id))))
+
 (comment
   (normalize-params {:foo "2" :bar {:gte "3"}})
   (def params {:speed {:gte 60}})
