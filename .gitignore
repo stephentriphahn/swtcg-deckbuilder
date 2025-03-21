@@ -13,3 +13,6 @@ pom.xml.asc
 .hg/
 .cpcache/
 .DS_Store
+/cards.db
+/.clj-kondo/
+/.lsp/

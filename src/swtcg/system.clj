@@ -5,7 +5,7 @@
             [swtcg.data.card :as card]))
 
 (def config {::app {:db (integrant/ref ::db)}
-             ::db {:conn-str "memory://"}
+             ::db {:conn-str "sqlite://cards.db"}
              ::server {:app (integrant/ref ::app)
                        :port 3000
                        :join? false}})

@@ -1,6 +1,8 @@
 (ns swtcg.data.card
-  (:require [clojure.java.io :as io]
-            [clojure.string :as str]))
+  (:require
+   [clojure.java.io :as io]
+   [clojure.string :as str]
+   [swtcg.data.load-cards :as load-cards]))
 
 (def num-fields #{:number :cost :health :power :speed})
 
@@ -9,7 +11,7 @@
 
 (defonce db (atom {}))
 
-(defn create-path
+(defn create-load-path
   [set-name]
   (str "/Users/stephentriphahn/development/SWTCG-LACKEY/starwars/sets/" set-name ".txt"))
 
@@ -107,14 +109,25 @@
   [connect-string]
   (new-memory-db))
 
+(defmethod connect "sqlite"
+  [connect-string]
+  (let [db {:dbtype "sqlite" :dbname "cards.db"}]
+    (reify CardDatabase
+      (get-by-id [this id]
+        (load-cards/search-cards db {:id id}))
+      (list-all [this opts]
+        (load-cards/search-cards db opts)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; development
 
 (comment
   (reset! db {})
-  (run! load-file! (map create-path sets-to-load)) ;; pre-load data
+  (run! load-file! (map create-load-path sets-to-load)) ;; pre-load data
   (def test-params {:speed {:gt 50} :side {:ne "N"} :cost {:lte 5}})
-  @db
+  (->> @db
+       :cards
+       vals)
   (filter (build-filter-fn test-params) @db)
   (into {} [[:foo "bar"]])
   #_())
