@@ -1,8 +1,7 @@
-(ns swtcg.data.card
+(ns swtcg.data.memory
   (:require
    [clojure.java.io :as io]
-   [clojure.string :as str]
-   [swtcg.data.load-cards :as load-cards]))
+   [clojure.string :as str]))
 
 (def num-fields #{:number :cost :health :power :speed})
 
@@ -84,40 +83,19 @@
   (apply every-pred (map param->filter params)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; connect and memory implementation
+;;; API
+(defn get-card-by-id
+  [id]
+  (-> @db :cards (get id)))
 
-(defprotocol CardDatabase
-  (list-all [this opts])
-  (get-by-id [this id]))
-
-(defn new-memory-db
-  []
-  (reify CardDatabase
-    (get-by-id [_ id]
-      (-> @db :cards (get id)))
-    (list-all [_ opts]
-      (let [filter-opts (dissoc opts :skip :limit)
-            cards-vec (-> @db :cards vals)]
-        (cond->> cards-vec
-          (not-empty filter-opts) (filter (build-filter-fn filter-opts))
-          (:limit opts) (take (:limit opts))
-          :always (map #(select-keys % [:id :imagefile :name])))))))
-
-(defmulti connect #(first (clojure.string/split % #"://")))
-
-(defmethod connect "memory"
-  [connect-string]
-  (new-memory-db))
-
-(defmethod connect "sqlite"
-  [connect-string]
-  (let [db {:dbtype "sqlite" :dbname "cards.db"}]
-    (reify CardDatabase
-      (get-by-id [this id]
-        (load-cards/search-cards db {:id id}))
-      (list-all [this opts]
-        (load-cards/search-cards db opts)))))
-
+(defn list-all
+  [opts]
+  (let [filter-opts (dissoc opts :skip :limit)
+        cards-vec (-> @db :cards vals)]
+    (cond->> cards-vec
+      (not-empty filter-opts) (filter (build-filter-fn filter-opts))
+      (:limit opts) (take (:limit opts))
+      :always (map #(select-keys % [:id :imagefile :name])))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; development
 

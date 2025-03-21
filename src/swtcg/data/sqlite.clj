@@ -1,4 +1,4 @@
-(ns swtcg.data.load-cards
+(ns swtcg.data.sqlite
   (:require [clojure.data.csv :as csv]
             [clojure.java.io :as io]
             [hugsql.core :as hugsql]))
