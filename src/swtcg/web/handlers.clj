@@ -1,10 +1,12 @@
 (ns swtcg.web.handlers
-  (:require [swtcg.data.card :as card]
-            [ring.util.response :as response]))
+  (:require
+   [ring.util.response :as response]
+   [swtcg.data.db :as db]
+   [swtcg.data.memory :as memory]))
 
 (defn parse
   [k v]
-  (if (or (card/num-fields k) (#{:gt :gte :lt :lte} k))
+  (if (or (memory/num-fields k) (#{:gt :gte :lt :lte} k))
     (Integer/parseInt v)
     v))
 
@@ -20,18 +22,18 @@
 
 (defn list-cards
   [{:keys [db params]}]
-  (response/response {:cards (card/list-all db (normalize-opts params))}))
+  (response/response {:cards (db/list-all db (normalize-opts params))}))
 
 (defn get-card-by-id
   [{:keys [db path-params]}]
   (let [id (get-in path-params [:id])]
-    (response/response (card/get-by-id db id))))
+    (response/response (db/get-by-id db id))))
 
 (comment
-  (normalize-params {:foo "2" :bar {:gte "3"}})
+  (normalize-opts {:foo "2" :bar {:gte "3"}})
   (def params {:speed {:gte 60}})
-  (def db (card/connect "memory://foo"))
-  (card/list-all db params)
+  (def db (db/connect "memory://foo"))
+  (db/list-all db params)
   (list-cards {:speed "60"})
   (#{:speed} :foo)
   #_())
