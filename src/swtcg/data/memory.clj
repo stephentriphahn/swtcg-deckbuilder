@@ -1,7 +1,7 @@
 (ns swtcg.data.memory
   (:require
    [clojure.java.io :as io]
-   [clojure.string :as str]))
+   [clojure.string :as string]))
 
 (def num-fields #{:number :cost :health :power :speed})
 
@@ -18,18 +18,18 @@
 
 (defn split-tab
   [header-string]
-  (str/split header-string #"\t"))
+  (string/split header-string #"\t"))
 
 (defn create-headers
   [header-string]
   (->> header-string
        split-tab
-       (map str/lower-case)
+       (map string/lower-case)
        (map keyword)))
 
 (defn normalize-int
   [x]
-  (when-not (str/blank? x)
+  (when-not (string/blank? x)
     (try
       (Integer/parseInt x)
       (catch Exception e
@@ -47,7 +47,7 @@
   [{:keys [set number] :as row}]
   (-> row
       (assoc :id (str set number))
-      (update :type (comp keyword str/lower-case))
+      (update :type (comp keyword string/lower-case))
       (update :imagefile build-image-path (:set row))))
 
 (defn- row->card
