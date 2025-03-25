@@ -3,7 +3,8 @@
    [clojure.data.csv :as csv]
    [clojure.java.io :as io]
    [hugsql.core :as hugsql]
-   [swtcg.data.db :refer [CardDatabase connect]]))
+   [swtcg.data.db :refer [CardDatabase connect]]
+   [swtcg.data.db :as db]))
 
 (defn parse-int [s]
   (when (and s (not-empty s))
@@ -39,9 +40,9 @@
 (hugsql/def-sqlvec-fns "swtcg/data/sql/cards.sql")
 (declare search-cards)
 
-(defmethod connect "sqlite"
-  [connect-string]
-  (let [db {:dbtype "sqlite" :dbname "cards.db"}]
+(defmethod connect :sqlite
+  [parsed-cs]
+  (let [db (db/parsed-cs->jdbc-config parsed-cs)]
     (reify CardDatabase
       (get-card-by-id [this id]
         (search-cards db {:id id}))

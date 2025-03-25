@@ -32,7 +32,7 @@
 (comment
   (normalize-opts {:foo "2" :bar {:gte "3"}})
   (def params {:speed {:gte 60}})
-  (def db (db/connect "memory://foo"))
+  (def db (db/connect (db/parse-connection-string "memory://foo")))
   (db/list-cards db params)
   (list-cards {:speed "60"})
   (#{:speed} :foo)

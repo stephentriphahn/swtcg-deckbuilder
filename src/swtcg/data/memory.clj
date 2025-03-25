@@ -98,7 +98,7 @@
       (:limit opts) (take (:limit opts))
       :always (map #(select-keys % [:id :imagefile :name])))))
 
-(defmethod connect "memory"
+(defmethod connect :memory
   [connect-string]
   (reify CardDatabase
     (get-card-by-id [_ id]

@@ -26,7 +26,7 @@
 
 (defmethod integrant/init-key ::db
   [_ {:keys [conn-str]}]
-  (db/connect conn-str))
+  (db/connect (db/parse-connection-string conn-str)))
 
 (defmethod integrant/halt-key! ::server
   [_ server]
