@@ -1,9 +1,7 @@
-(ns swtcg.data.sqlite
-  (:require
-   [clojure.data.csv :as csv]
-   [clojure.java.io :as io]
-   [hugsql.core :as hugsql]
-   [swtcg.data.db :refer [CardDatabase connect]]))
+(ns swtcg.data.load-cards
+  (:require [clojure.data.csv :as csv]
+            [clojure.java.io :as io]
+            [hugsql.core :as hugsql]))
 
 (defn parse-int [s]
   (when (and s (not-empty s))
@@ -37,16 +35,8 @@
 (hugsql/def-db-fns "swtcg/data/sql/decks.sql")
 (hugsql/def-sqlvec-fns "swtcg/data/sql/decks.sql")
 (hugsql/def-sqlvec-fns "swtcg/data/sql/cards.sql")
-(declare search-cards)
 
-(defmethod connect "sqlite"
-  [connect-string]
-  (let [db {:dbtype "sqlite" :dbname "cards.db"}]
-    (reify CardDatabase
-      (get-card-by-id [this id]
-        (search-cards db {:id id}))
-      (list-cards [this opts]
-        (search-cards db opts)))))
+(def db {:dbtype "sqlite" :dbname "cards.db"})
 
 (comment
   (not-empty [:foo])

@@ -1,4 +1,4 @@
-{:path ["src" "test" "resources"]
+{:paths ["src" "test" "resources" "dev"]
  :deps {metosin/reitit {:mvn/version "0.7.1"}
         ring/ring-jetty-adapter {:mvn/version "1.7.1"}
         org.clojure/clojure {:mvn/version "1.11.1"}
@@ -6,4 +6,12 @@
         clojure_data_csv/clojure_data_csv {:mvn/version "0.1.0-SNAPSHOT"}
         seancorfield/next.jdbc {:mvn/version "1.2.659"}
         sqlitejdbc/sqlitejdbc {:mvn/version "0.5.6"}
-        com.layerware/hugsql {:mvn/version "0.5.3"}}}
+        com.layerware/hugsql {:mvn/version "0.5.3"}
+        integrant/repl {:mvn/version "0.4.0"}
+        aero/aero {:mvn/version "1.1.6"}
+        }
+ :aliases {:dev {:main-opts ["-e" "(require, 'dev)" "-e" "(in-ns 'dev)"]}
+           :test {:extra-paths ["test"]
+                  :extra-deps {io.github.cognitect-labs/test-runner {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+                  :main-opts ["-m" "cognitect.test-runner"]
+                  :exec-fn cognitect.test-runner.api/test}}}

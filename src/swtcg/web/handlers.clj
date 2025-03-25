@@ -22,18 +22,18 @@
 
 (defn list-cards
   [{:keys [db params]}]
-  (response/response {:cards (db/list-all db (normalize-opts params))}))
+  (response/response {:cards (db/list-cards db (normalize-opts params))}))
 
 (defn get-card-by-id
   [{:keys [db path-params]}]
   (let [id (get-in path-params [:id])]
-    (response/response (db/get-by-id db id))))
+    (response/response (db/get-card-by-id db id))))
 
 (comment
   (normalize-opts {:foo "2" :bar {:gte "3"}})
   (def params {:speed {:gte 60}})
   (def db (db/connect "memory://foo"))
-  (db/list-all db params)
+  (db/list-cards db params)
   (list-cards {:speed "60"})
   (#{:speed} :foo)
   #_())

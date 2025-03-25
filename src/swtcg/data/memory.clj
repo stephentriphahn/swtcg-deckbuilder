@@ -1,7 +1,8 @@
 (ns swtcg.data.memory
   (:require
    [clojure.java.io :as io]
-   [clojure.string :as string]))
+   [clojure.string :as string]
+   [swtcg.data.db :refer [CardDatabase connect]]))
 
 (def num-fields #{:number :cost :health :power :speed})
 
@@ -96,6 +97,14 @@
       (not-empty filter-opts) (filter (build-filter-fn filter-opts))
       (:limit opts) (take (:limit opts))
       :always (map #(select-keys % [:id :imagefile :name])))))
+
+(defmethod connect "memory"
+  [connect-string]
+  (reify CardDatabase
+    (get-card-by-id [_ id]
+      (get-card-by-id id))
+    (list-cards [_ opts]
+      (list-all opts))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; development
 

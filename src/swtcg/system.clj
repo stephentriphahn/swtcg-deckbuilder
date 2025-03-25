@@ -1,14 +1,20 @@
 (ns swtcg.system
-  (:require [integrant.core :as integrant]
-            [ring.adapter.jetty :as jetty]
-            [swtcg.web.routes :as routes]
-            [swtcg.data.db :as db]))
+  (:require
+   [integrant.core :as integrant]
+   [ring.adapter.jetty :as jetty]
+   [swtcg.config :as config]
+   [swtcg.data.db :as db]
+   [swtcg.data.memory]
+   [swtcg.data.sqlite]
+   [swtcg.web.routes :as routes]))
 
-(def config {::app {:db (integrant/ref ::db)}
-             ::db {:conn-str "sqlite://cards.db"}
-             ::server {:app (integrant/ref ::app)
-                       :port 3000
-                       :join? false}})
+(defn config->system-map
+  [config]
+  {::app {:db (integrant/ref ::db)}
+   ::db {:conn-str (config/card-db-cs config)}
+   ::server {:app (integrant/ref ::app)
+             :port 3000
+             :join? false}})
 
 (defmethod integrant/init-key ::app
   [_ {:keys [db]}]
@@ -27,7 +33,7 @@
   (.stop server))
 
 (comment
-  (def system (integrant/init config))
+  (def system (integrant/init (config->system-map (config/read-config))))
   system
   (integrant/halt! system)
   #_())
