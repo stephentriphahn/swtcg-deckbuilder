@@ -38,7 +38,7 @@
   [{:keys [backend database host port user password]}]
   (cond-> {:dbtype (name backend)
            :dbname database}
-    (= backend :sqlite) (assoc :dbname host)
+    (= backend :sqlite) (assoc :dbname host) ;; FIXME this is a hack for sqlite cs without a hostname
     host (assoc :host host)
     port (assoc :port port)
     user (assoc :user user)

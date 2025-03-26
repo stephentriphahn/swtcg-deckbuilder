@@ -3,8 +3,8 @@
    [clojure.data.csv :as csv]
    [clojure.java.io :as io]
    [hugsql.core :as hugsql]
-   [swtcg.data.db :refer [CardDatabase connect]]
-   [swtcg.data.db :as db]))
+   [swtcg.data.db :as db]
+   [swtcg.log :as log]))
 
 (defn parse-int [s]
   (when (and s (not-empty s))
@@ -21,6 +21,7 @@
       (update :Script #(if (empty? %) nil %))))
 
 (defn read-tsv [filename]
+  (log/info :reading-tsv-file {:filename filename})
   (with-open [reader (io/reader filename)]
     (let [rows (csv/read-csv reader :separator \tab)
           headers (map keyword (first rows))
@@ -40,10 +41,10 @@
 (hugsql/def-sqlvec-fns "swtcg/data/sql/cards.sql")
 (declare search-cards)
 
-(defmethod connect :sqlite
+(defmethod db/connect :sqlite
   [parsed-cs]
   (let [db (db/parsed-cs->jdbc-config parsed-cs)]
-    (reify CardDatabase
+    (reify db/CardDatabase
       (get-card-by-id [this id]
         (search-cards db {:id id}))
       (list-cards [this opts]

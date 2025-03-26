@@ -1,16 +1,12 @@
 (ns swtcg.web.routes
-  (:require [reitit.core :as reitit]
-            [reitit.ring :as ring]
+  (:require [reitit.ring :as ring]
             [reitit.swagger :as swagger]
             [reitit.swagger-ui :as swagger-ui]
             [reitit.ring.middleware.muuntaja :as muuntaja]
-            [ring.middleware.nested-params :as nested]
-            [ring.middleware.keyword-params :as kw-params]
             [reitit.ring.middleware.parameters :as param-mw]
             [muuntaja.core :as m]
             [swtcg.web.handlers :as handlers]
-            [swtcg.web.middleware :as mw]
-            [ring.adapter.jetty :as jetty]))
+            [swtcg.web.middleware :as mw]))
 
 (def routes
   [["/heartbeat"
@@ -44,10 +40,8 @@
    (ring/routes
     (swagger-ui/create-swagger-ui-handler
      {:path "/docs"})
-    (ring/create-file-handler {:path "/" :root "resources"})
+    (ring/create-file-handler {:path "/" :root "resources/public/"})
     (ring/create-default-handler))))
 
 (comment
-  (def server (start))
-  (.stop server)
   #_())
