@@ -1,8 +1,8 @@
 (ns swtcg.web.handlers
   (:require
    [ring.util.response :as response]
-   [swtcg.data.db :as db]
-   [swtcg.data.memory :as memory]))
+   [swtcg.db.db :as db]
+   [swtcg.db.memory :as memory]))
 
 (defn parse
   [k v]

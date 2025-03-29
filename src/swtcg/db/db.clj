@@ -1,6 +1,6 @@
-(ns swtcg.data.db
+(ns swtcg.db.db
   (:require
-   [clojure.string :as str])
+   [clojure.string :as string])
   (:import
    (java.net URI)))
 

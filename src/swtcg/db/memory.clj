@@ -1,8 +1,8 @@
-(ns swtcg.data.memory
+(ns swtcg.db.memory
   (:require
    [clojure.java.io :as io]
    [clojure.string :as string]
-   [swtcg.data.db :refer [CardDatabase connect]]))
+   [swtcg.db.db :refer [CardDatabase connect]]))
 
 (def num-fields #{:number :cost :health :power :speed})
 

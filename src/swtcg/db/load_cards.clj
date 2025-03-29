@@ -1,4 +1,4 @@
-(ns swtcg.data.load-cards
+(ns swtcg.db.load-cards
   (:require [clojure.data.csv :as csv]
             [clojure.java.io :as io]
             [hugsql.core :as hugsql]))
@@ -31,10 +31,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; load into sqlite
 
-(hugsql/def-db-fns "swtcg/data/sql/cards.sql")
-(hugsql/def-db-fns "swtcg/data/sql/decks.sql")
-(hugsql/def-sqlvec-fns "swtcg/data/sql/decks.sql")
-(hugsql/def-sqlvec-fns "swtcg/data/sql/cards.sql")
+(hugsql/def-db-fns "swtcg/db/sql/cards.sql")
+(hugsql/def-db-fns "swtcg/db/sql/decks.sql")
+(hugsql/def-sqlvec-fns "swtcg/db/sql/decks.sql")
+(hugsql/def-sqlvec-fns "swtcg/db/sql/cards.sql")
 
 (def db {:dbtype "sqlite" :dbname "cards.db"})
 

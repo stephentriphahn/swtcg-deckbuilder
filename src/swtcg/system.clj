@@ -3,9 +3,9 @@
    [integrant.core :as integrant]
    [ring.adapter.jetty :as jetty]
    [swtcg.config :as config]
-   [swtcg.data.db :as db]
-   [swtcg.data.memory]
-   [swtcg.data.sqlite]
+   [swtcg.db.db :as db]
+   [swtcg.db.memory]
+   [swtcg.db.sqlite]
    [swtcg.web.routes :as routes]))
 
 (defn config->system-map

@@ -1,10 +1,10 @@
-(ns swtcg.data.sqlite
+(ns swtcg.db.sqlite
   (:require
    [clojure.data.csv :as csv]
    [clojure.java.io :as io]
    [clojure.string :as string]
    [hugsql.core :as hugsql]
-   [swtcg.data.db :as db]
+   [swtcg.db.db :as db]
    [swtcg.log :as log]))
 
 (defn parse-int [s]
@@ -39,10 +39,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; load into sqlite
 
-(hugsql/def-db-fns "swtcg/data/sql/cards.sql")
-(hugsql/def-db-fns "swtcg/data/sql/decks.sql")
-(hugsql/def-sqlvec-fns "swtcg/data/sql/decks.sql")
-(hugsql/def-sqlvec-fns "swtcg/data/sql/cards.sql")
+(hugsql/def-db-fns "swtcg/db/sql/cards.sql")
+(hugsql/def-db-fns "swtcg/db/sql/decks.sql")
+(hugsql/def-sqlvec-fns "swtcg/db/sql/decks.sql")
+(hugsql/def-sqlvec-fns "swtcg/db/sql/cards.sql")
 
 (declare search-cards)
 (declare insert-deck!)
