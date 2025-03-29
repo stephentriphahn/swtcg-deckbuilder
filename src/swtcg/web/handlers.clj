@@ -27,7 +27,7 @@
 (defn get-card-by-id
   [{:keys [db path-params]}]
   (let [id (get-in path-params [:id])]
-    (response/response (db/get-card-by-id db id))))
+    (response/response (first (db/get-card-by-id db id)))))
 
 (comment
   (normalize-opts {:foo "2" :bar {:gte "3"}})

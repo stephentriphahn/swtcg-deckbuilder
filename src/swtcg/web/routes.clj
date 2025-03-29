@@ -4,6 +4,9 @@
             [reitit.swagger-ui :as swagger-ui]
             [reitit.ring.middleware.muuntaja :as muuntaja]
             [reitit.ring.middleware.parameters :as param-mw]
+            [reitit.coercion.malli]
+            [reitit.ring.coercion :as coercion]
+            [reitit.ring.middleware.exception :as exception]
             [muuntaja.core :as m]
             [swtcg.web.handlers :as handlers]
             [swtcg.web.middleware :as mw]))
@@ -22,20 +25,25 @@
              :handler handlers/list-cards}}]
      ["/:id" {:name ::card-by-id}
       ["" {:get {:summary "get a card by id"
-                 :parameters {:path {:id string?}}
+                 :parameters {:path {:id number?}}
                  :handler handlers/get-card-by-id}}]]]]])
 
 (defn app [db]
   (ring/ring-handler
    (ring/router routes
                 {:data {:db db
+                        :coercion reitit.coercion.malli/coercion
                         :muuntaja m/instance
                         :middleware [swagger/swagger-feature
                                      muuntaja/format-middleware
                                      param-mw/parameters-middleware
                                      mw/nested-params
                                      mw/keyword-params
-                                     mw/add-db]}})
+                                     mw/add-db
+                                     exception/exception-middleware
+                                     coercion/coerce-exceptions-middleware
+                                     coercion/coerce-request-middleware
+                                     coercion/coerce-response-middleware]}})
 
    (ring/routes
     (swagger-ui/create-swagger-ui-handler

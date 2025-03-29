@@ -9,20 +9,27 @@
 
 (defn parse-int [s]
   (when (and s (not-empty s))
-    (Integer/parseInt s)))
+    (try
+      (Integer/parseInt s)
+      (catch Exception e
+        (log/warn :card-number-parse-error {:value s})
+        -1))))
 
 (defn process-card [card]
-  (-> card
-      (update :cost parse-int)
-      (update :speed parse-int)
-      (update :power parse-int)
-      (update :health parse-int)
-      (update :number parse-int)
-      (update :usage #(if (empty? %) nil %))
-      (update :script #(if (empty? %) nil %))
+  (try
+    (-> card
+        (update :cost parse-int)
+        (update :speed parse-int)
+        (update :power parse-int)
+        (update :health parse-int)
+        (update :number parse-int)
+        (update :usage #(if (empty? %) nil %))
+        (update :script #(if (empty? %) nil %))
       ;; associng to add sql field names, ie set -> set_name and imagefile to image_file
-      (assoc :set_code (:set card))
-      (assoc :image_file (:imagefile card))))
+        (assoc :set_code (:set card))
+        (assoc :image_file (:imagefile card)))
+    (catch Exception e
+      (log/error :process-card-error {:card card} e))))
 
 (defn read-tsv [filename]
   (log/info :reading-tsv-file {:filename filename})
@@ -88,7 +95,7 @@
 
 (comment
   (not-empty [:foo])
-  (read-cards "resources/public/AOTC.txt")
+  (map :name (read-cards "resources/public/ESB.txt"))
 
   (def db {:dbname "cards.db" :dbtype "sqlite"})
   (def cdb (create-card-db db))
@@ -97,7 +104,7 @@
   (create-cards-to-deck-table db)
   (remove-card-from-deck! db {:deck_id 1 :card_id 1})
   (def test-deck {:name "testA" :side "L" :owner "admin" :format "standard"})
-  (mapv (partial insert-card! db) (read-cards "resources/public/AOTC.txt"))
+  (mapv (partial insert-card! db) (read-cards "resources/public/ESB.txt"))
   (db/list-cards cdb {:side "D" :set_code "ANH"})
 
   (db/add-deck cdb test-deck)
