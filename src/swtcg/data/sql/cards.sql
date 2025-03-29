@@ -1,6 +1,9 @@
+-- :name enable-foreign-keys! :! :n
+PRAGMA foreign_keys = ON;
+
 -- :name create-cards-table :! :n
 CREATE TABLE IF NOT EXISTS cards (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  card_id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   set_code TEXT,
   image_file TEXT,
@@ -16,16 +19,15 @@ CREATE TABLE IF NOT EXISTS cards (
   usage TEXT,
   text TEXT,
   script TEXT,
-  classification TEXT,
-  abilities TEXT  -- Stored as JSON
+  classification TEXT
 );
 
 -- :name insert-card! :! :1
-INSERT INTO cards (name, set_code, image_file, side, type, subtype, cost, speed, power, health, rarity, number, usage, text, script, classification, abilities)
-VALUES (:name, :set_code, :image_file, :side, :type, :subtype, :cost, :speed, :power, :health, :rarity, :number, :usage, :text, :script, :classification, :abilities);
+INSERT INTO cards (name, set_code, image_file, side, type, subtype, cost, speed, power, health, rarity, number, usage, text, script, classification)
+VALUES (:name, :set_code, :image_file, :side, :type, :subtype, :cost, :speed, :power, :health, :rarity, :number, :usage, :text, :script, :classification);
 
 -- :name get-card-by-id :? :1
-SELECT * FROM cards WHERE id = :id;
+SELECT * FROM cards WHERE id = :card_id;
 
 -- :name get-card-by-name :? :1
 SELECT * FROM cards WHERE name = :name;

@@ -5,7 +5,7 @@
         integrant/integrant {:mvn/version "0.10.0"}
         clojure_data_csv/clojure_data_csv {:mvn/version "0.1.0-SNAPSHOT"}
         seancorfield/next.jdbc {:mvn/version "1.2.659"}
-        sqlitejdbc/sqlitejdbc {:mvn/version "0.5.6"}
+        org.xerial/sqlite-jdbc {:mvn/version "3.49.1.0"}
         com.layerware/hugsql {:mvn/version "0.5.3"}
         integrant/repl {:mvn/version "0.4.0"}
         aero/aero {:mvn/version "1.1.6"}

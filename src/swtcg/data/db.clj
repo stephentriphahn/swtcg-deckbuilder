@@ -47,8 +47,19 @@
 ;;; connect and memory implementation
 
 (defprotocol CardDatabase
-  (list-cards [this opts])
-  (get-card-by-id [this id]))
+  ;; Read-only card operations
+  (list-cards [this opts] "Returns all cards in the system. Opts map equivalent to where [key] = [value]")
+  (get-card-by-id [this id] "Returns a single card by Id")
+
+  ;; deck meta-data creation
+  (add-deck [this deck] "Creates a new deck. Expects {:name :owner :side}")
+  (delete-deck [this deck-id] "Removes a deck from the system.")
+  (get-deck-by-id [this deck-id] "Retrieves deck metadata")
+
+  ;; associating cards with decks
+  (get-deck-cards [this deck-id])
+  (add-card-to-deck [this deck-id card-id quantity] "Adds or updates a card in a deck.")
+  (remove-card-from-deck [this deck-id card-id] "Removes a card entirely from a deck."))
 
 (defmulti connect #(:backend %))
 
