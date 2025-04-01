@@ -1,0 +1,19 @@
+[{:name :not-found
+  :type NotFoundException
+  :status 404
+  :message "Resource not found"}
+
+ {:name :bad-request
+  :type BadRequestException
+  :status 400
+  :message "Invalid request"}
+
+ {:name :conflict
+  :type ConflictException
+  :status 409
+  :message "Conflict occurred"}
+
+ {:name :unauthorized
+  :type UnauthorizedException
+  :status 401
+  :message "You are not authorized to access this resource"}]

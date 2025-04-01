@@ -1,52 +1,33 @@
-(ns swtcg.web.error)
+(ns swtcg.web.error
+  (:require [clojure.edn :as edn]
+            [clojure.java.io :as io]))
 
-(deftype NotFoundException [^String message ^clojure.lang.IPersistentMap data]
-  Exception
-  (getMessage [_] message)
-  (getCause [_] nil)
+(defmacro defexceptions
+  "Registers functions for each item in the error registry.
+  These error constructors return an Exception that can be thrown"
+  [registry-sym]
+  (let [registry (eval registry-sym)
+        types (for [{:keys [name status message]} registry
+                    :let [data-sym (gensym "data")
+                          name-sym (symbol name)]]
+                [`(defn ~name-sym
+                    [^clojure.lang.IPersistentMap ~data-sym]
+                    (ex-info ~message (merge {:status ~status :type ~name} ~data-sym)))
+                 `(defmethod render-exception ~name [e#]
+                    {:status ~status
+                     :body {:error (.getMessage e#)}})])]
+    `(do ~@(reduce concat types))))
 
-  clojure.lang.IExceptionInfo
-  (getData [_] data))
+(defmulti render-exception #(-> % ex-data :type))
 
-(deftype BadRequestException [^String message ^clojure.lang.IPersistentMap data]
-  Exception
-  (getMessage [_] message)
-  (getCause [_] nil)
+(defn load-error-registry []
+  (with-open [r (-> "http-errors.edn"
+                    io/resource
+                    io/reader)]
+    (edn/read (java.io.PushbackReader. r))))
 
-  clojure.lang.IExceptionInfo
-  (getData [_] data))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; API and middleware
-
-(defn not-found
-  "Construct a NotFoundException with a message and optional data."
-  ([msg] (NotFoundException. msg nil))
-  ([msg data] (NotFoundException. msg data)))
-
-(defn bad-request
-  "Construct a BadRequestException with a message and optional data."
-  ([msg] (BadRequestException. msg nil))
-  ([msg data] (BadRequestException. msg data)))
-
-(defmulti render-exception
-  "Convert an exception to an HTTP response map."
-  type)
-
-(defmethod render-exception NotFoundException [^NotFoundException e]
-  {:status 404
-   :body {:error (.getMessage e)
-          :data (.getData e)}})
-
-(defmethod render-exception BadRequestException [^BadRequestException e]
-  {:status 400
-   :body {:error (.getMessage e)
-          :data (.getData e)}})
-
-(defmethod render-exception :default [e]
-  {:status 500
-   :body {:error "Unexpected server error"
-          :message (.getMessage e)}})
+(defonce error-registry (load-error-registry))
+(defexceptions error-registry)
 
 (defn translate-error-middleware
   "Catches exceptions and renders HTTP responses."
@@ -56,3 +37,11 @@
       (handler req)
       (catch Exception e
         (render-exception e)))))
+
+(comment
+  (load-error-registry)
+  (ex-message (not-found "not found" {:foo "bar"}))
+  (render-exception (not-found "not found" {:foo "bar"}))
+  (macroexpand-1 '(defexceptions error-registry))
+  (macroexpand-1 '(defrenderers error-registry))
+  #_())
