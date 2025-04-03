@@ -67,7 +67,7 @@
   (let [_ (enable-foreign-keys! db)]
     (reify db/CardDatabase
       (get-card-by-id [this id]
-        (search-cards db {:card_id id}))
+        (first (search-cards db {:card_id id})))
       (list-cards [this opts]
         (search-cards db opts))
 

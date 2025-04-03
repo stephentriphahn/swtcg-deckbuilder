@@ -2,7 +2,8 @@
   (:require
    [ring.util.response :as response]
    [swtcg.db.db :as db]
-   [swtcg.db.memory :as memory]))
+   [swtcg.db.memory :as memory]
+   [swtcg.web.error :as error]))
 
 (defn parse
   [k v]
@@ -26,8 +27,11 @@
 
 (defn get-card-by-id
   [{:keys [db path-params]}]
-  (let [id (get-in path-params [:id])]
-    (response/response (first (db/get-card-by-id db id)))))
+  (let [id (get-in path-params [:id])
+        card (db/get-card-by-id db id)]
+    (if-not card
+      (throw (error/not-found {:card-id id}))
+      (response/response card))))
 
 (comment
   (normalize-opts {:foo "2" :bar {:gte "3"}})

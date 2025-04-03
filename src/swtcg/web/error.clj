@@ -1,6 +1,7 @@
 (ns swtcg.web.error
   (:require [clojure.edn :as edn]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [swtcg.log :as log]))
 
 (defmacro defexceptions
   "Registers functions for each item in the error registry.
@@ -8,17 +9,17 @@
   [registry-sym]
   (let [registry (eval registry-sym)
         types (for [{:keys [name status message]} registry
-                    :let [data-sym (gensym "data")
-                          name-sym (symbol name)]]
+                    :let [name-sym (symbol name)]]
                 [`(defn ~name-sym
-                    [^clojure.lang.IPersistentMap ~data-sym]
-                    (ex-info ~message (merge {:status ~status :type ~name} ~data-sym)))
+                    [^clojure.lang.IPersistentMap data#]
+                    (ex-info ~message (merge {:type ~name} data#)))
                  `(defmethod render-exception ~name [e#]
                     {:status ~status
                      :body {:error (.getMessage e#)}})])]
     `(do ~@(reduce concat types))))
 
 (defmulti render-exception #(-> % ex-data :type))
+(defmethod render-exception :default [e] (throw e))
 
 (defn load-error-registry []
   (with-open [r (-> "http-errors.edn"
@@ -36,12 +37,13 @@
     (try
       (handler req)
       (catch Exception e
+        (log/error :http-error {:message (ex-message e) :data (ex-data e)})
         (render-exception e)))))
 
 (comment
   (load-error-registry)
-  (ex-message (not-found "not found" {:foo "bar"}))
-  (render-exception (not-found "not found" {:foo "bar"}))
+  (not-found {:foo "bar"})
+  (render-exception (not-found  {:foo "bar"}))
   (macroexpand-1 '(defexceptions error-registry))
   (macroexpand-1 '(defrenderers error-registry))
   #_())

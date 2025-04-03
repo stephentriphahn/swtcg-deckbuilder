@@ -43,7 +43,8 @@
                                      exception/exception-middleware
                                      coercion/coerce-exceptions-middleware
                                      coercion/coerce-request-middleware
-                                     coercion/coerce-response-middleware]}})
+                                     coercion/coerce-response-middleware
+                                     mw/translate-http-error]}})
 
    (ring/routes
     (swagger-ui/create-swagger-ui-handler
