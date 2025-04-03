@@ -75,7 +75,7 @@
         (insert-deck! db deck)
         (get-deck-by-name db {:name (:name deck)}))
       (get-deck-by-id [this deck-id]
-        (get-deck-by-id db {:deck_id deck-id}))
+        (first (get-deck-by-id db {:deck_id deck-id})))
       (delete-deck [this deck-id]
         (delete-deck! db {:deck_id deck-id})
         ;; FIXME this is a hack because cascade delete not working in sqlite
