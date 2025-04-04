@@ -41,6 +41,7 @@
     (= backend :sqlite) (assoc :dbname host) ;; FIXME this is a hack for sqlite cs without a hostname
     host (assoc :host host)
     port (assoc :port port)
+    (= backend :sqlite) (dissoc :host)
     user (assoc :user user)
     password (assoc :password password)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

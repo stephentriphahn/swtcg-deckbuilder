@@ -13,6 +13,7 @@
         org.slf4j/slf4j-api {:mvn/version "2.0.9"}
         metosin/malli {:mvn/version "0.17.0"}
         ch.qos.logback/logback-classic {:mvn/version "1.4.14"}
+        migratus/migratus {:mvn/version "1.5.3"}
         cheshire/cheshire {:mvn/version "5.13.0"}}
  :aliases {:dev {:main-opts ["-e" "(require, 'dev)" "-e" "(in-ns 'dev)"]}
            :test {:extra-paths ["test"]

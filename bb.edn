@@ -1,0 +1,24 @@
+{:paths ["src"]
+ :tasks
+ {create-migration
+  {:doc "Create an empty SQL migration with a timestamped filename"
+   :requires ([clojure.string :as str]
+              [babashka.fs :as fs]
+              [babashka.cli :as cli])
+   :task
+   (let [{:keys [args]} (cli/parse-args *command-line-args*)
+         name (first args)]
+     (if (nil? name)
+       (println "❌ Usage: bb create-migration <name-kebab-case>")
+       (let [timestamp (.format (java.time.format.DateTimeFormatter/ofPattern "yyyyMMddHHmmss")
+                                (java.time.LocalDateTime/now))
+             base-name (str timestamp "-" name)
+             dir "resources/migrations"
+             up-file (str dir "/" base-name ".up.sql")
+             down-file (str dir "/" base-name ".down.sql")]
+         (fs/create-dirs dir)
+         (spit up-file (str "-- Migration: " name " (UP)\n\n"))
+         (spit down-file (str "-- Migration: " name " (DOWN)\n\n"))
+         (println "✅ Created migrations:")
+         (println "   " up-file)
+         (println "   " down-file))))}}}

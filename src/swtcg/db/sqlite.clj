@@ -104,7 +104,7 @@
   (create-cards-to-deck-table db)
   (remove-card-from-deck! db {:deck_id 1 :card_id 1})
   (def test-deck {:name "testA" :side "L" :owner "admin" :format "standard"})
-  (mapv (partial insert-card! db) (read-cards "resources/public/ESB.txt"))
+  (mapv (partial insert-card! db) (read-cards "resources/public/AOTC.txt"))
   (db/list-cards cdb {:side "D" :set_code "ANH"})
 
   (db/add-deck cdb test-deck)
