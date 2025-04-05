@@ -94,22 +94,10 @@
     (create-card-db db)))
 
 (comment
-  (not-empty [:foo])
-  (map :name (read-cards "resources/public/ESB.txt"))
 
   (def db {:dbname "cards.db" :dbtype "sqlite"})
   (def cdb (create-card-db db))
-  (create-cards-table db)
-  (create-decks-table db)
-  (create-cards-to-deck-table db)
-  (remove-card-from-deck! db {:deck_id 1 :card_id 1})
-  (def test-deck {:name "testA" :side "L" :owner "admin" :format "standard"})
-  (mapv (partial insert-card! db) (read-cards "resources/public/AOTC.txt"))
-  (db/list-cards cdb {:side "D" :set_code "ANH"})
-
-  (db/add-deck cdb test-deck)
-  (db/add-card-to-deck cdb 2 1 4)
-  (db/get-deck-cards cdb 2)
-  (db/get-deck-by-id cdb 2)
-  (db/delete-deck cdb 2)
+  (def sets-to-load #{"AOTC" "SR" "ANH" "BOY" "ESB" "RAS" "JG" "ROTJ" "PM" "ROTS"})
+  (mapv #(mapv (partial insert-card! db) (read-cards (str "resources/public/sets" % ".txt"))) sets-to-load)
+  (db/list-cards cdb {:side "D" :cost 5 :set_code "RAS"})
   #_())

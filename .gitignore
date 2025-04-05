@@ -17,3 +17,6 @@ pom.xml.asc
 /.clj-kondo/
 /.lsp/
 /.envrc
+.shadow-cljs/
+node_modules/
+resources/public/js
