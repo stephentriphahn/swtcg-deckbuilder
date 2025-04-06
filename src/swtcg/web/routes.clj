@@ -7,6 +7,7 @@
             [reitit.coercion.malli]
             [reitit.ring.coercion :as coercion]
             [reitit.ring.middleware.exception :as exception]
+            [ring.middleware.cors :refer [wrap-cors]]
             [muuntaja.core :as m]
             [swtcg.web.handlers :as handlers]
             [swtcg.web.middleware :as mw]))
@@ -69,28 +70,31 @@
                                       :handler handlers/remove-card-from-deck}}]]]])
 
 (defn app [db]
-  (ring/ring-handler
-   (ring/router routes
-                {:data {:db db
-                        :coercion reitit.coercion.malli/coercion
-                        :muuntaja m/instance
-                        :middleware [swagger/swagger-feature
-                                     muuntaja/format-middleware
-                                     param-mw/parameters-middleware
-                                     mw/nested-params
-                                     mw/keyword-params
-                                     mw/add-db
-                                     exception/exception-middleware
-                                     coercion/coerce-exceptions-middleware
-                                     coercion/coerce-request-middleware
-                                     coercion/coerce-response-middleware
-                                     mw/translate-http-error]}})
+  (-> (ring/ring-handler
+       (ring/router routes
+                    {:data {:db db
+                            :coercion reitit.coercion.malli/coercion
+                            :muuntaja m/instance
+                            :middleware [swagger/swagger-feature
+                                         muuntaja/format-middleware
+                                         param-mw/parameters-middleware
+                                         mw/nested-params
+                                         mw/keyword-params
+                                         mw/add-db
+                                         exception/exception-middleware
+                                         coercion/coerce-exceptions-middleware
+                                         coercion/coerce-request-middleware
+                                         coercion/coerce-response-middleware
+                                         mw/translate-http-error]}})
 
-   (ring/routes
-    (swagger-ui/create-swagger-ui-handler
-     {:path "/docs"})
-    (ring/create-file-handler {:path "/" :root "resources/public/"})
-    (ring/create-default-handler))))
+       (ring/routes
+        (swagger-ui/create-swagger-ui-handler
+         {:path "/docs"})
+        (ring/create-file-handler {:path "/" :root "resources/public/"})
+        (ring/create-default-handler)))
+      (wrap-cors
+       :access-control-allow-origin [#"http://localhost:8700"]
+       :access-control-allow-methods [:get :post :put :delete :options])))
 
 (comment
   #_())

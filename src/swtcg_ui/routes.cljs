@@ -7,37 +7,6 @@
    [re-frame.core :as re-frame]
    [swtcg-ui.views :as views]))
 
-;; (re-frame/reg-fx
-;;  ::navigate!
-;;  (fn [k params query]
-;;    (rfe/push-state k params query)))
-
-;; (def routes
-;;   [["/" {:name ::home
-;;          :view (fn [] [:div "Welcome to SWTGC"])}]
-
-;;    ["/cards" {:name ::cards
-;;               :view (fn [] [:div [:h1 "Cards Page"]])}]
-
-;;    ["/decks" {:name ::decks
-;;               :view (fn [] [:div [:h1 "Decks Page"]])}]])
-
-;; (def router
-;;   (rf/router routes))
-
-;; (defn on-navigate [new-match]
-;;   (when new-match
-;;     (re-frame/dispatch [:route/navigated new-match])))
-
-;; (defn start! []
-;;   (rfe/start!
-;;    router
-;;    on-navigate
-;;    {:use-fragment false}))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; routes
-;; Triggering navigation from events.
 (re-frame/reg-fx
  :navigate!
  (fn [k params query]
@@ -86,28 +55,26 @@
             m  (assoc new-match :controllers cs)]
         (re-frame/dispatch [:navigated m])))))
 
-(def router
-  (rf/router
-   routes))
+(def router (rf/router routes))
 
 (defn init-routes! []
   (js/console.log "initializing routes")
   (rfe/start!
    router
    on-navigate
-   {:use-fragment true}))
+   {:use-fragment false}))
 
-(defn nav [{:keys [router current-route]}]
-  (into
-   [:ul]
-   (for [route-name (r/route-names router)
-         :let       [route (r/match-by-name router route-name)
-                     text (-> route :data :link-text)]]
-     [:li
-      (when (= route-name (-> current-route :data :name))
-        "> ")
-      ;; Create a normal links that user can click
-      [:a {:href (href route-name)} text]])))
+(defn nav [{:keys [router]}]
+  [:nav.navbar.navbar-expand-lg.navbar-light.bg-light.mb-4
+   [:div.container-fluid
+    [:a.navbar-brand {:href "/"} "SWTGC"]
+    [:ul.navbar-nav.me-auto.mb-2.mb-lg-0
+     (for [route-name (r/route-names router)
+           :let       [route (r/match-by-name router route-name)
+                       text (-> route :data :link-text)]]
+       ^{:key text}
+       [:li.nav-item
+        [:a.nav-link {:href (href route-name)} text]])]]])
 
 (defn router-component [{:keys [router]}]
   (let [current-route @(re-frame/subscribe [:current-route])]
