@@ -1,9 +1,18 @@
 (ns swtcg-ui.views
-  (:require [re-frame.core :as rf]))
+  (:require [re-frame.core :as re-frame]))
 
-(defn main []
-  (let [decks @(rf/subscribe [:decks])]
-    [:div
-     [:h1 "Card Browser"]
-     (for [{:keys [name id]} decks]
-       [:div {:key id} (str name)])]))
+(defn home-page []
+  [:div
+   [:h1 "This is home page"]
+   [:button
+    ;; Dispatch navigate event that triggers a (side)effect.
+    {:on-click #(re-frame/dispatch [:navigate :swtcg-ui.routes/cards])}
+    "Go to sub-page 2"]])
+
+(defn cards-page []
+  [:div
+   [:h1 "This is cards"]])
+
+(defn decks-page []
+  [:div
+   [:h1 "This is decks page"]])
