@@ -29,6 +29,9 @@ VALUES (:name, :set_code, :image_file, :side, :type, :subtype, :cost, :speed, :p
 -- :name get-card-by-id :? :1
 SELECT * FROM cards WHERE id = :card_id;
 
+-- :name get-all-loaded-sets :? :*
+SELECT DISTINCT set_code from cards;
+
 -- :name get-card-by-name :? :1
 SELECT * FROM cards WHERE name = :name;
 

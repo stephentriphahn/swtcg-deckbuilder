@@ -1,50 +1,7 @@
 (ns swtcg.db.sqlite
   (:require
-   [clojure.data.csv :as csv]
-   [clojure.java.io :as io]
-   [clojure.string :as string]
    [hugsql.core :as hugsql]
-   [swtcg.db.db :as db]
-   [swtcg.log :as log]))
-
-(defn parse-int [s]
-  (when (and s (not-empty s))
-    (try
-      (Integer/parseInt s)
-      (catch Exception e
-        (log/warn :card-number-parse-error {:value s})
-        -1))))
-
-(defn process-card [card]
-  (try
-    (-> card
-        (update :cost parse-int)
-        (update :speed parse-int)
-        (update :power parse-int)
-        (update :health parse-int)
-        (update :number parse-int)
-        (update :usage #(if (empty? %) nil %))
-        (update :script #(if (empty? %) nil %))
-      ;; associng to add sql field names, ie set -> set_name and imagefile to image_file
-        (assoc :set_code (:set card))
-        (assoc :image_file (:imagefile card)))
-    (catch Exception e
-      (log/error :process-card-error {:card card} e))))
-
-(defn read-tsv [filename]
-  (log/info :reading-tsv-file {:filename filename})
-  (with-open [reader (io/reader filename)]
-    (let [rows (csv/read-csv reader :separator \tab)
-          headers (map (comp keyword string/lower-case) (first rows))
-          data (rest rows)]
-      (mapv #(zipmap headers %) data))))
-
-(defn read-cards
-  [filename]
-  (map process-card (read-tsv filename)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; load into sqlite
+   [swtcg.db.db :as db]))
 
 (hugsql/def-db-fns "swtcg/db/sql/cards.sql")
 (hugsql/def-db-fns "swtcg/db/sql/decks.sql")
@@ -61,6 +18,7 @@
 (declare enable-foreign-keys!)
 (declare remove-card-from-deck!)
 (declare remove-all-cards-from-deck!)
+(declare insert-card!)
 
 (defn- create-card-db
   [db]
@@ -94,7 +52,6 @@
     (create-card-db db)))
 
 (comment
-
   (def db {:dbname "cards.db" :dbtype "sqlite"})
   (def cdb (create-card-db db))
   (def sets-to-load #{"AOTC" "SR" "ANH" "BOY" "ESB" "RAS" "JG" "ROTJ" "PM" "ROTS"})

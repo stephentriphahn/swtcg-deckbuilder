@@ -26,7 +26,7 @@
  :load-cards
  (fn [{:keys [db]} [_ _]]
    {:db (assoc db :fetching? true)
-    :http-xhrio {:uri "http://localhost:3000/api/v1/cards"
+    :http-xhrio {:uri "/api/v1/cards"
                  :method :get
                  :format          (ajax/json-request-format)
                  :response-format (ajax/json-response-format {:keywords? true})  ;; IMPORTANT!: You must provide this.
