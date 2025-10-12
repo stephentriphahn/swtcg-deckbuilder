@@ -3,7 +3,10 @@
             [swtcg.config :as config]
             [swtcg.db.db :as db]))
 
-(def db-config (db/parsed-cs->jdbc-config (db/parse-connection-string (config/card-db-cs (config/read-config)))))
+(def db-config (-> (config/read-config)
+                   config/card-db-cs
+                   db/parse-connection-string
+                   db/parsed-cs->jdbc-config))
 
 (defn cs->migratus-config
   [cs]

@@ -1,9 +1,13 @@
 (ns swtcg.web.handlers
   (:require
    [ring.util.response :as response]
+   [swtcg.log :as log]
    [swtcg.db.db :as db]
    [swtcg.db.memory :as memory]
    [swtcg.web.error :as error]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; helpers
 
 (defn parse
   [k v]
@@ -21,6 +25,9 @@
   [params]
   (into {} (map parse-int params)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; handlers
+
 (defn list-cards
   [{:keys [db params]}]
   (response/response {:cards (db/list-cards db (normalize-opts params))}))
@@ -35,16 +42,21 @@
 
 (defn create-deck
   [{:keys [db parameters]}]
-  (try
-    (let [deck (db/add-deck db (:body parameters))]
-      {:status 201
-       :headers {"Location" (str "/api/v1/decks/" (:id deck))}
-       :body deck})
-    (catch org.sqlite.SQLiteException e
-      (if (re-find #"(?i)unique" (ex-message e))
-        (throw (error/conflict "A deck with that name already exists."
-                               {:name (:name (:body parameters))}))
-        (throw e)))))
+  (let [deck (db/add-deck db (:body parameters))]
+    {:status 201
+     :headers {"Location" (str "/api/v1/decks/" (:id deck))}
+     :body deck}))
+
+(defn get-deck-by-id [arg1])
+(defn delete-deck [arg1])
+
+(defn add-card-to-deck [{:keys [db parameters]}]
+  (let [{:keys [card-id quantity]} (:body parameters)
+        {:keys [id]} (:path parameters)]
+    (db/add-card-to-deck db id card-id quantity)))
+
+(defn remove-card-from-deck [arg1])
+(defn list-decks [arg1])
 
 (comment
   (normalize-opts {:foo "2" :bar {:gte "3"}})
@@ -54,8 +66,3 @@
   (list-cards {:speed "60"})
   (#{:speed} :foo)
   #_())
-(defn get-deck-by-id [arg1])
-(defn delete-deck [arg1])
-(defn add-card-to-deck [arg1])
-(defn remove-card-from-deck [arg1])
-(defn list-decks [arg1])

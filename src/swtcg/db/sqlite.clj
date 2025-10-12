@@ -1,7 +1,8 @@
 (ns swtcg.db.sqlite
   (:require
    [hugsql.core :as hugsql]
-   [swtcg.db.db :as db]))
+   [swtcg.db.db :as db]
+   [swtcg.web.error :as error]))
 
 (hugsql/def-db-fns "swtcg/db/sql/cards.sql")
 (hugsql/def-db-fns "swtcg/db/sql/decks.sql")
@@ -30,10 +31,19 @@
         (search-cards db opts))
 
       (add-deck [this deck]
-        (insert-deck! db deck)
-        (get-deck-by-name db {:name (:name deck)}))
+        (try
+          (insert-deck! db deck)
+          (get-deck-by-name db {:name (:name deck)})
+          (catch org.sqlite.SQLiteException e
+            (if (re-find #"(?i)unique" (ex-message e))
+              (throw
+               (error/conflict "A deck with that name already exists."
+                               {:name (-> deck :body :name)}))
+              (throw e)))))
+
       (get-deck-by-id [this deck-id]
         (first (get-deck-by-id db {:deck_id deck-id})))
+
       (delete-deck [this deck-id]
         (delete-deck! db {:deck_id deck-id})
         ;; FIXME this is a hack because cascade delete not working in sqlite
