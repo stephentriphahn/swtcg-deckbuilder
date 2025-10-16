@@ -17,9 +17,10 @@ CREATE TABLE IF NOT EXISTS cards_to_deck (
   FOREIGN KEY (card_id) REFERENCES cards(card_id)
 );
 
--- :name insert-deck! :! :1
+-- :name insert-deck! :? :1
 INSERT INTO decks (name, owner, format, side)
-VALUES (:name, :owner, :format, :side);
+VALUES (:name, :owner, :format, :side)
+RETURNING *;
 
 -- :name insert-card-to-deck! :! :1
 INSERT INTO cards_to_deck (deck_id, card_id, quantity)

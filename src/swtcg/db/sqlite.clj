@@ -21,6 +21,17 @@
 (declare remove-all-cards-from-deck!)
 (declare insert-card!)
 
+(defn- add-deck*
+  [db deck]
+  (try
+    (insert-deck! db deck)
+    (catch org.sqlite.SQLiteException e
+      (if (re-find #"(?i)unique" (ex-message e))
+        (throw
+         (error/conflict "A deck with that name already exists."
+                         {:name (-> deck :body :name)}))
+        (throw e)))))
+
 (defn- create-card-db
   [db]
   (let [_ (enable-foreign-keys! db)]
@@ -31,15 +42,7 @@
         (search-cards db opts))
 
       (add-deck [this deck]
-        (try
-          (insert-deck! db deck)
-          (get-deck-by-name db {:name (:name deck)})
-          (catch org.sqlite.SQLiteException e
-            (if (re-find #"(?i)unique" (ex-message e))
-              (throw
-               (error/conflict "A deck with that name already exists."
-                               {:name (-> deck :body :name)}))
-              (throw e)))))
+        (add-deck* db deck))
 
       (get-deck-by-id [this deck-id]
         (first (get-deck-by-id db {:deck_id deck-id})))
@@ -62,9 +65,10 @@
     (create-card-db db)))
 
 (comment
-  (def db {:dbname "cards.db" :dbtype "sqlite"})
-  (def cdb (create-card-db db))
+  (def db-spec {:dbname "cards.db" :dbtype "sqlite"})
+  (def cdb (create-card-db db-spec))
   (def sets-to-load #{"AOTC" "SR" "ANH" "BOY" "ESB" "RAS" "JG" "ROTJ" "PM" "ROTS"})
   (mapv #(mapv (partial insert-card! db) (read-cards (str "resources/public/sets" % ".txt"))) sets-to-load)
-  (db/list-cards cdb {:side "D" :cost 5 :set_code "RAS"})
+  (db/get-deck-cards cdb 1)
+  (db/list-cards cdb {:side "D" :cost 5 :set_code "AOTC"})
   #_())

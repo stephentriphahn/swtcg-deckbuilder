@@ -10,20 +10,8 @@
             [ring.middleware.cors :refer [wrap-cors]]
             [muuntaja.core :as m]
             [swtcg.web.handlers :as handlers]
-            [swtcg.web.middleware :as mw]))
-
-(def AddCardToDeckSchema
-  [:map
-   [:card-id int?]
-   [:quantity [:int {:min 1 :max 4}]]])
-
-(def CreateDeckRequestSchema
-  [:map
-   [:name [:string {:min 1}]]
-   [:owner [:string {:min 1}]]
-   [:format [:string {:min 1}]]
-   [:cards {:optional true} [:vector AddCardToDeckSchema]]
-   [:side [:enum "L" "D"]]]) ;; Light/Dark
+            [swtcg.web.middleware :as mw]
+            [swtcg.web.schema :as schema]))
 
 (def cards-routes
   ["/cards" {:swagger {:tags ["cards"]}}
@@ -40,7 +28,7 @@
    ["" {:get {:summary "List all decks"
               :handler handlers/list-decks}
         :post {:summary "Create a new deck"
-               :parameters {:body CreateDeckRequestSchema}
+               :parameters {:body schema/CreateDeckRequest}
                :handler handlers/create-deck}}]
 
    ["/:id" {:name ::deck-by-id
@@ -53,7 +41,7 @@
 
    ["/:id/cards" {:post {:summary "Add card to deck"
                          :parameters {:path {:id int?}
-                                      :body AddCardToDeckSchema}
+                                      :body schema/AddCardToDeck}
                          :handler handlers/add-card-to-deck}}]
 
    ["/:id/cards/:card-id" {:delete {:summary "Remove card from deck"
@@ -95,7 +83,7 @@
         (ring/create-file-handler {:path "/" :root "resources/public/"})
         (ring/create-default-handler)))
       (wrap-cors
-       :access-control-allow-origin [#"http://localhost:8700"]
+       :access-control-allow-origin [#"http://localhost:5173"]
        :access-control-allow-methods [:get :post :put :delete :options])))
 
 (comment
