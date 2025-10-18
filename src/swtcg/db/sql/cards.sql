@@ -27,7 +27,7 @@ INSERT INTO cards (name, set_code, image_file, side, type, subtype, cost, speed,
 VALUES (:name, :set_code, :image_file, :side, :type, :subtype, :cost, :speed, :power, :health, :rarity, :number, :usage, :text, :script, :classification);
 
 -- :name get-card-by-id :? :1
-SELECT * FROM cards WHERE id = :card_id;
+SELECT * FROM cards WHERE card_id = :card_id;
 
 -- :name get-all-loaded-sets :? :*
 SELECT DISTINCT set_code from cards;

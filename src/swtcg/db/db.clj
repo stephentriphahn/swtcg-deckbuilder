@@ -7,7 +7,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; generic structure for connection string uri to clojure map
 ;;; TODO implement schema check (is spec still relevant?)
-;;; {:backend :sqlite              ;; or :postgres, :mongo, :memory
+;;; {:scheme :sqlite              ;; or :postgres, :mongo, :memory
 ;;;  :database "cards"
 ;;;  :host nil
 ;;;  :port nil
@@ -25,7 +25,7 @@
         path (.getPath uri)
         user-info (.getUserInfo uri)
         [user password] (when user-info (clojure.string/split user-info #":" 2))]
-    {:backend backend
+    {:scheme backend
      :database (some-> path (clojure.string/replace #"^/" ""))
      :host host
      :port (when (not= port -1) port)
@@ -35,13 +35,13 @@
      :raw-uri conn-str}))
 
 (defn parsed-cs->jdbc-config
-  [{:keys [backend database host port user password]}]
-  (cond-> {:dbtype (name backend)
+  [{:keys [scheme database host port user password]}]
+  (cond-> {:dbtype (name scheme)
            :dbname database}
-    (= backend :sqlite) (assoc :dbname host) ;; FIXME this is a hack for sqlite cs without a hostname
+    (= scheme :sqlite) (assoc :dbname host) ;; FIXME this is a hack for sqlite cs without a hostname
     host (assoc :host host)
     port (assoc :port port)
-    (= backend :sqlite) (dissoc :host)
+    (= scheme :sqlite) (dissoc :host)
     user (assoc :user user)
     password (assoc :password password)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -62,7 +62,7 @@
   (add-card-to-deck [this deck-id card-id quantity] "Adds or updates a card in a deck.")
   (remove-card-from-deck [this deck-id card-id] "Removes a card entirely from a deck."))
 
-(defmulti connect #(:backend %))
+(defmulti connect #(:scheme %))
 
 (comment
   (def test-cs "sqlite://memory/cards.db")

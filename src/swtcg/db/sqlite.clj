@@ -10,6 +10,7 @@
 (hugsql/def-sqlvec-fns "swtcg/db/sql/cards.sql")
 
 (declare search-cards)
+(declare get-card-by-id)
 (declare insert-deck!)
 (declare insert-card-to-deck!)
 (declare get-deck-by-id)
@@ -37,7 +38,7 @@
   (let [_ (enable-foreign-keys! db)]
     (reify db/CardDatabase
       (get-card-by-id [this id]
-        (first (search-cards db {:card_id id})))
+        (get-card-by-id db {:card_id id}))
       (list-cards [this opts]
         (search-cards db opts))
 
@@ -45,7 +46,7 @@
         (add-deck* db deck))
 
       (get-deck-by-id [this deck-id]
-        (first (get-deck-by-id db {:deck_id deck-id})))
+        (get-deck-by-id db {:deck_id deck-id}))
 
       (delete-deck [this deck-id]
         (delete-deck! db {:deck_id deck-id})

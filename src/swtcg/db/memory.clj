@@ -89,7 +89,7 @@
   [id]
   (-> @db :cards (get id)))
 
-(defn list-all
+(defn list-cards*
   [opts]
   (let [filter-opts (dissoc opts :skip :limit)
         cards-vec (-> @db :cards vals)]
@@ -99,12 +99,12 @@
       :always (map #(select-keys % [:id :imagefile :name])))))
 
 (defmethod connect :memory
-  [connect-string]
+  [_connect-string]
   (reify CardDatabase
     (get-card-by-id [_ id]
       (get-card-by-id id))
     (list-cards [_ opts]
-      (list-all opts))))
+      (list-cards* opts))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; development
 

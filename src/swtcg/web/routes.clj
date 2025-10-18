@@ -39,10 +39,10 @@
                      :parameters {:path {:id int?}}
                      :handler handlers/delete-deck}}]
 
-   ["/:id/cards" {:post {:summary "Add card to deck"
-                         :parameters {:path {:id int?}
-                                      :body schema/AddCardToDeck}
-                         :handler handlers/add-card-to-deck}}]
+   ["/:id/cards" {:put {:summary "Add card to deck"
+                        :parameters {:path {:id int?}
+                                     :body schema/AddCardToDeck}
+                        :handler handlers/add-card-to-deck}}]
 
    ["/:id/cards/:card-id" {:delete {:summary "Remove card from deck"
                                     :parameters {:path {:id int?

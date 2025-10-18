@@ -4,6 +4,7 @@
    [swtcg.log :as log]
    [swtcg.db.db :as db]
    [swtcg.db.memory :as memory]
+   [swtcg.services.deck-service :as deck-service]
    [swtcg.web.error :as error]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -47,7 +48,10 @@
      :headers {"Location" (str "/api/v1/decks/" (:id deck))}
      :body deck}))
 
-(defn get-deck-by-id [arg1])
+(defn get-deck-by-id
+  [{:keys [db parameters]}]
+  {:status 200 :body (deck-service/get-deck db (:id (:path parameters)))})
+
 (defn delete-deck [arg1])
 
 (defn add-card-to-deck [{:keys [db parameters]}]
