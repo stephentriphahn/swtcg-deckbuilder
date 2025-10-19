@@ -7,12 +7,14 @@
    [swtcg.db.memory]
    [swtcg.db.migratus :as mig]
    [swtcg.db.sqlite]
-   [swtcg.web.routes :as routes]))
+   [swtcg.web.routes :as routes]
+   [swtcg.db.connection :as conn]))
 
 (defn config->system-map
   [config]
   {::app {:db (integrant/ref ::db)}
-   ::db {:conn-str (config/card-db-cs config)}
+   ::connection {:conn-str (config/card-db-cs config)}
+   ::db {:connection (integrant/ref ::connection)}
    ::migrations {:db (integrant/ref ::db)
                  :conn-str (config/card-db-cs config)}
    ::server {:app (integrant/ref ::app)
@@ -27,9 +29,17 @@
   [_ {:keys [app] :as args}]
   (jetty/run-jetty app (dissoc args :handler)))
 
-(defmethod integrant/init-key ::db
+(defmethod integrant/init-key ::connection
   [_ {:keys [conn-str]}]
-  (db/connect (db/parse-connection-string conn-str)))
+  (conn/connect conn-str))
+
+(defmethod integrant/halt-key! ::connection
+  [_ connection]
+  (conn/close connection))
+
+(defmethod integrant/init-key ::db
+  [_ {:keys [connection]}]
+  (db/create-database connection))
 
 (defmethod integrant/init-key ::migrations
   [_ {:keys [conn-str]}]

@@ -1,5 +1,6 @@
 (ns swtcg.db.db
   (:require
+   [swtcg.db.connection :as conn]
    [clojure.string :as string])
   (:import
    (java.net URI)))
@@ -44,8 +45,6 @@
     (= scheme :sqlite) (dissoc :host)
     user (assoc :user user)
     password (assoc :password password)))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; connect and memory implementation
 
 (defprotocol CardDatabase
   ;; Read-only card operations
@@ -62,7 +61,9 @@
   (add-card-to-deck [this deck-id card-id quantity] "Adds or updates a card in a deck.")
   (remove-card-from-deck [this deck-id card-id] "Removes a card entirely from a deck."))
 
-(defmulti connect #(:scheme %))
+(defmulti create-database
+  "Create database implementation from connection"
+  conn/db-type)
 
 (comment
   (def test-cs "sqlite://memory/cards.db")

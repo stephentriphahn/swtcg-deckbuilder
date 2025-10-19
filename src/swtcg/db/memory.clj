@@ -2,15 +2,13 @@
   (:require
    [clojure.java.io :as io]
    [clojure.string :as string]
-   [swtcg.db.db :refer [CardDatabase connect]]))
+   [swtcg.db.connection :as conn]
+   [swtcg.db.db :as db]))
 
 (def num-fields #{:number :cost :health :power :speed})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; memory impl helpers
-
-(defonce db (atom {}))
-
 (defn create-load-path
   [set-name]
   (str "/Users/stephentriphahn/development/SWTCG-LACKEY/starwars/sets/" set-name ".txt"))
@@ -47,7 +45,7 @@
 (defn normalize
   [{:keys [set number] :as row}]
   (-> row
-      (assoc :id (str set number))
+      (assoc :card_id (str set number))
       (update :type (comp keyword string/lower-case))
       (update :imagefile build-image-path (:set row))))
 
@@ -57,7 +55,7 @@
     (vector (:id card) card)))
 
 (defn- load-file!
-  [path]
+  [path db]
   (with-open [rdr (io/reader path)]
     (let [[fields & r] (line-seq rdr)
           headers (create-headers fields)
@@ -85,31 +83,47 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; API
-(defn get-card-by-id
-  [id]
-  (-> @db :cards (get id)))
 
 (defn list-cards*
-  [opts]
+  [state opts]
   (let [filter-opts (dissoc opts :skip :limit)
-        cards-vec (-> @db :cards vals)]
+        cards-vec (-> @state :cards vals)]
     (cond->> cards-vec
       (not-empty filter-opts) (filter (build-filter-fn filter-opts))
       (:limit opts) (take (:limit opts))
       :always (map #(select-keys % [:id :imagefile :name])))))
 
-(defmethod connect :memory
-  [_connect-string]
-  (reify CardDatabase
-    (get-card-by-id [_ id]
-      (get-card-by-id id))
-    (list-cards [_ opts]
-      (list-cards* opts))))
+(defrecord MemoryCardDatabase [state]
+  db/CardDatabase
+  (get-card-by-id [_ id]
+    (-> @state :cards (get id)))
+  (list-cards [_ opts]
+    (list-cards* state opts)))
+
+(defrecord MemoryConnection [state]
+  conn/ConnectionProvider
+  (get-db [_] state)
+  (db-type [_] :memory)  ; Simple!
+  (close [_]
+    (reset! state {:decks {} :cards {} :cards-to-deck {}})))
+
+(defmethod conn/connect :memory
+  [_conn-str]
+  (let [initial-state {:decks {}
+                       :cards {}
+                       :cards-to-deck {}}]
+    (->MemoryConnection (atom initial-state))))
+
+(defmethod db/create-database :memory
+  [connection]
+  (->MemoryCardDatabase (conn/get-db connection)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; development
 
 (comment
-  (reset! db {})
+  (def test-db-atom (atom {}))
+  (def db (->MemoryCardDatabase test-db-atom))
   (run! load-file! (map create-load-path sets-to-load)) ;; pre-load data
   (def test-params {:speed {:gt 50} :side {:ne "N"} :cost {:lte 5}})
   (->> @db

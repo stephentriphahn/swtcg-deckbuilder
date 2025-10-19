@@ -1,8 +1,18 @@
 (ns swtcg.db.sqlite
   (:require
    [hugsql.core :as hugsql]
+   [hugsql.adapter.next-jdbc :as adapter]
+   [next.jdbc :as jdbc]
    [swtcg.db.db :as db]
+   [swtcg.db.connection :as conn]
    [swtcg.web.error :as error]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; hug initialization
+
+;; Tell HugSQL to use next.jdbc adapter
+;; This is needed now that I'm using an actual connection and not a map
+(hugsql/set-adapter! (adapter/hugsql-adapter-next-jdbc))
 
 (hugsql/def-db-fns "swtcg/db/sql/cards.sql")
 (hugsql/def-db-fns "swtcg/db/sql/decks.sql")
@@ -22,6 +32,9 @@
 (declare remove-all-cards-from-deck!)
 (declare insert-card!)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; implementations
+
 (defn- add-deck*
   [db deck]
   (try
@@ -33,43 +46,68 @@
                          {:name (-> deck :body :name)}))
         (throw e)))))
 
-(defn- create-card-db
-  [db]
-  (let [_ (enable-foreign-keys! db)]
-    (reify db/CardDatabase
-      (get-card-by-id [this id]
-        (get-card-by-id db {:card_id id}))
-      (list-cards [this opts]
-        (search-cards db opts))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; API
 
-      (add-deck [this deck]
-        (add-deck* db deck))
+(defrecord SqliteCardDatabase [db]
+  db/CardDatabase
+  (get-card-by-id [this id]
+    (get-card-by-id db {:card_id id}))
+  (list-cards [this opts]
+    (search-cards db opts))
 
-      (get-deck-by-id [this deck-id]
-        (get-deck-by-id db {:deck_id deck-id}))
+  (add-deck [this deck]
+    (add-deck* db deck))
 
-      (delete-deck [this deck-id]
-        (delete-deck! db {:deck_id deck-id})
-        ;; FIXME this is a hack because cascade delete not working in sqlite
-        (remove-all-cards-from-deck! db {:deck_id deck-id}))
+  (get-deck-by-id [this deck-id]
+    (get-deck-by-id db {:deck_id deck-id}))
 
-      (get-deck-cards [this deck-id]
-        (get-deck-cards db {:deck_id deck-id}))
-      (add-card-to-deck [this deck-id card-id quantity]
-        (insert-card-to-deck! db {:deck_id deck-id :card_id card-id :quantity quantity}))
-      (remove-card-from-deck [this deck-id card-id]
-        (remove-card-from-deck! db {:deck_id deck-id :card_id card-id})))))
+  (delete-deck [this deck-id]
+    (delete-deck! db {:deck_id deck-id})
+    ;; FIXME this is a hack because cascade delete not working in sqlite
+    (remove-all-cards-from-deck! db {:deck_id deck-id}))
 
-(defmethod db/connect :sqlite
-  [parsed-cs]
-  (let [db (db/parsed-cs->jdbc-config parsed-cs)]
-    (create-card-db db)))
+  (get-deck-cards [this deck-id]
+    (get-deck-cards db {:deck_id deck-id}))
+  (add-card-to-deck [this deck-id card-id quantity]
+    (insert-card-to-deck! db {:deck_id deck-id :card_id card-id :quantity quantity}))
+  (remove-card-from-deck [this deck-id card-id]
+    (remove-card-from-deck! db {:deck_id deck-id :card_id card-id})))
 
+(defmethod db/create-database :sqlite
+  [connection]
+  (->SqliteCardDatabase (conn/get-db connection)))
+
+(defrecord SqliteConnection [datasource db-path]
+  conn/ConnectionProvider
+  (get-db [_] datasource)
+  (db-type [_] :sqlite)
+  (close [_]
+    ;; next.jdbc handles closing connections for us, keep around for potential future pools
+    nil))
+
+(defmethod conn/connect :sqlite
+  [conn-str]
+  (let [{:keys [path]} (conn/parse-connection-string conn-str)
+        jdbc-url (str "jdbc:sqlite:" path)
+        datasource (jdbc/get-datasource {:jdbcUrl jdbc-url})]
+
+    ;; configure sqlite here
+    (jdbc/execute! datasource ["PRAGMA foreign_keys = ON"])
+    (jdbc/execute! datasource ["PRAGMA journal_mode = WAL"])
+
+    (->SqliteConnection datasource path)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; dev
 (comment
-  (def db-spec {:dbname "cards.db" :dbtype "sqlite"})
-  (def cdb (create-card-db db-spec))
+  (def connection (conn/connect "sqlite://cards.db"))
+  (def db (db/create-database connection))
+  db
+  (:datasource connection)
   (def sets-to-load #{"AOTC" "SR" "ANH" "BOY" "ESB" "RAS" "JG" "ROTJ" "PM" "ROTS"})
   (mapv #(mapv (partial insert-card! db) (read-cards (str "resources/public/sets" % ".txt"))) sets-to-load)
-  (db/get-deck-cards cdb 1)
-  (db/list-cards cdb {:side "D" :cost 5 :set_code "AOTC"})
+  (db/get-deck-cards db 1)
+  (db/list-cards db {:side "D" :cost 5 :set_code "AOTC"})
+  (get-card-by-id db {:card_id 1})
   #_())
