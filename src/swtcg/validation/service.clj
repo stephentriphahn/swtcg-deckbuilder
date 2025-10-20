@@ -26,6 +26,6 @@
 
 (comment
   (def deck {:deck-id 1 :name "foo" :owner "foo" :format "standard" :side "D"})
-  (def cards [{:card-id 1 :power 4 :type :character :side "D" :quantity 6} {:card-id 1 :type :character :side "N" :quantity 4}])
+  (def cards [{:card-id 1 :name "bar" :power 4 :type :character :side "D" :quantity 6} {:card-id 4 :name "baz" :type :character :side "L" :quantity 4}])
   (validate-deck deck cards)
   #_())

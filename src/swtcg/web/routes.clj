@@ -49,7 +49,7 @@
                                                              :card-id int?}}
                                          :handler handlers/remove-card-from-deck}
                                 :put {:summary "Add card to deck"
-                                      :parameters {:path {:id int?}
+                                      :parameters {:path {:card-id int?}
                                                    :body schema/AddCardToDeck}
                                       :handler handlers/add-card-to-deck}}]])
 
