@@ -52,15 +52,18 @@
 (defn- row->card
   [headers row]
   (let [card (->> row split-tab (zipmap headers) (parse-int-fields num-fields) normalize)]
-    (vector (:id card) card)))
+    (vector (:card_id card) card)))
 
 (defn- load-file!
-  [path db]
+  [db path]
   (with-open [rdr (io/reader path)]
     (let [[fields & r] (line-seq rdr)
           headers (create-headers fields)
           cards (into {} (mapv #(row->card headers %) r))]
       (swap! db update :cards merge cards))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; filter list
 
 (def kw-to-comparator {:eq = :ne (complement =) :lt < :gt > :lte <= :gte >=})
 
@@ -124,11 +127,10 @@
 (comment
   (def test-db-atom (atom {}))
   (def db (->MemoryCardDatabase test-db-atom))
-  (run! load-file! (map create-load-path sets-to-load)) ;; pre-load data
+  (run! (partial load-file! test-db-atom) (map create-load-path sets-to-load)) ;; pre-load data
   (def test-params {:speed {:gt 50} :side {:ne "N"} :cost {:lte 5}})
-  (->> @db
-       :cards
-       vals)
-  (filter (build-filter-fn test-params) @db)
+  @test-db-atom
+
+  (filter (build-filter-fn test-params) (vals (:cards @test-db-atom)))
   (into {} [[:foo "bar"]])
   #_())

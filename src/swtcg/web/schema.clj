@@ -10,6 +10,5 @@
    [:name [:string {:min 1}]]
    [:owner [:string {:min 1}]]
    [:format [:string {:min 1}]]
-   [:cards {:optional true} [:vector AddCardToDeck]]
    [:side [:enum "L" "D"]]]) ;; Light/Dark
 

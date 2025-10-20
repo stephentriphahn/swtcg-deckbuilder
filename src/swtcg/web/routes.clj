@@ -31,23 +31,27 @@
                :parameters {:body schema/CreateDeckRequest}
                :handler handlers/create-deck}}]
 
-   ["/:id" {:name ::deck-by-id
-            :get {:summary "Get a deck by ID"
-                  :parameters {:path {:id int?}}
-                  :handler handlers/get-deck-by-id}
-            :delete {:summary "Delete a deck"
-                     :parameters {:path {:id int?}}
-                     :handler handlers/delete-deck}}]
+   ["/:deck-id" {:name ::deck-by-id
+                 :get {:summary "Get a deck by ID"
+                       :parameters {:path {:deck-id int?}}
+                       :handler handlers/get-deck-by-id}
+                 :delete {:summary "Delete a deck"
+                          :parameters {:path {:id int?}}
+                          :handler handlers/delete-deck}}]
 
-   ["/:id/cards" {:put {:summary "Add card to deck"
-                        :parameters {:path {:id int?}
-                                     :body schema/AddCardToDeck}
-                        :handler handlers/add-card-to-deck}}]
+   ["/:deck-id/cards" {:post {:summary "Add multiple cards to deck"
+                              :parameters {:path {:deck-id int?}
+                                           :body schema/AddCardToDeck}
+                              :handler handlers/add-cards-to-deck}}]
 
-   ["/:id/cards/:card-id" {:delete {:summary "Remove card from deck"
-                                    :parameters {:path {:id int?
-                                                        :card-id int?}}
-                                    :handler handlers/remove-card-from-deck}}]])
+   ["/:deck-id/cards/:card-id" {:delete {:summary "Remove card from deck"
+                                         :parameters {:path {:deck-id int?
+                                                             :card-id int?}}
+                                         :handler handlers/remove-card-from-deck}
+                                :put {:summary "Add card to deck"
+                                      :parameters {:path {:id int?}
+                                                   :body schema/AddCardToDeck}
+                                      :handler handlers/add-card-to-deck}}]])
 
 (def routes
   [["/heartbeat"

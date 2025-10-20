@@ -3,6 +3,7 @@
    [hugsql.core :as hugsql]
    [hugsql.adapter.next-jdbc :as adapter]
    [next.jdbc :as jdbc]
+   [next.jdbc.result-set :as rs]
    [swtcg.db.db :as db]
    [swtcg.db.connection :as conn]
    [swtcg.web.error :as error]))
@@ -12,7 +13,8 @@
 
 ;; Tell HugSQL to use next.jdbc adapter
 ;; This is needed now that I'm using an actual connection and not a map
-(hugsql/set-adapter! (adapter/hugsql-adapter-next-jdbc))
+(hugsql/set-adapter! (adapter/hugsql-adapter-next-jdbc
+                      {:builder-fn rs/as-unqualified-kebab-maps}))
 
 (hugsql/def-db-fns "swtcg/db/sql/cards.sql")
 (hugsql/def-db-fns "swtcg/db/sql/decks.sql")
@@ -52,7 +54,7 @@
 (defrecord SqliteCardDatabase [db]
   db/CardDatabase
   (get-card-by-id [this id]
-    (get-card-by-id db {:card_id id}))
+    (get-card-by-id db {:card-id id}))
   (list-cards [this opts]
     (search-cards db opts))
 
@@ -60,19 +62,19 @@
     (add-deck* db deck))
 
   (get-deck-by-id [this deck-id]
-    (get-deck-by-id db {:deck_id deck-id}))
+    (get-deck-by-id db {:deck-id deck-id}))
 
   (delete-deck [this deck-id]
-    (delete-deck! db {:deck_id deck-id})
+    (delete-deck! db {:deck-id deck-id})
     ;; FIXME this is a hack because cascade delete not working in sqlite
-    (remove-all-cards-from-deck! db {:deck_id deck-id}))
+    (remove-all-cards-from-deck! db {:deck-id deck-id}))
 
   (get-deck-cards [this deck-id]
-    (get-deck-cards db {:deck_id deck-id}))
+    (get-deck-cards db {:deck-id deck-id}))
   (add-card-to-deck [this deck-id card-id quantity]
-    (insert-card-to-deck! db {:deck_id deck-id :card_id card-id :quantity quantity}))
+    (insert-card-to-deck! db {:deck-id deck-id :card-id card-id :quantity quantity}))
   (remove-card-from-deck [this deck-id card-id]
-    (remove-card-from-deck! db {:deck_id deck-id :card_id card-id})))
+    (remove-card-from-deck! db {:deck-id deck-id :card-id card-id})))
 
 (defmethod db/create-database :sqlite
   [connection]
@@ -105,8 +107,6 @@
   (def db (db/create-database connection))
   db
   (:datasource connection)
-  (def sets-to-load #{"AOTC" "SR" "ANH" "BOY" "ESB" "RAS" "JG" "ROTJ" "PM" "ROTS"})
-  (mapv #(mapv (partial insert-card! db) (read-cards (str "resources/public/sets" % ".txt"))) sets-to-load)
   (db/get-deck-cards db 1)
   (db/list-cards db {:side "D" :cost 5 :set_code "AOTC"})
   (get-card-by-id db {:card_id 1})

@@ -45,19 +45,28 @@
   [{:keys [db parameters]}]
   (let [deck (db/add-deck db (:body parameters))]
     {:status 201
-     :headers {"Location" (str "/api/v1/decks/" (:id deck))}
+     :headers {"Location" (str "/api/v1/decks/" (:deck-id deck))}
      :body deck}))
 
 (defn get-deck-by-id
   [{:keys [db parameters]}]
-  {:status 200 :body (deck-service/get-deck db (:id (:path parameters)))})
+  {:status 200 :body (deck-service/get-deck db (:deck-id (:path parameters)))})
 
 (defn delete-deck [arg1])
+
+(defn- add-card
+  [db id card-id quantity]
+  (db/add-card-to-deck db id card-id quantity))
 
 (defn add-card-to-deck [{:keys [db parameters]}]
   (let [{:keys [card-id quantity]} (:body parameters)
         {:keys [id]} (:path parameters)]
-    (db/add-card-to-deck db id card-id quantity)))
+    {:status 200 :body (add-card db id card-id quantity)}))
+
+(defn add-cards-to-deck [{:keys [db parameters]}]
+  (let [cards (:body parameters)
+        {:keys [deck-id]} (:path parameters)]
+    {:status 200 :body (map #(add-card db deck-id (:card-id %) (:quantity %)) cards)}))
 
 (defn remove-card-from-deck [arg1])
 (defn list-decks [arg1])

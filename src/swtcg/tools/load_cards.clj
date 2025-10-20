@@ -34,8 +34,7 @@
   (log/info :reading-tsv-file {:filename filename})
   (with-open [reader (io/reader filename)]
     (let [rows (csv/read-csv reader :separator \tab)
-          headers (map (comp keyword string/lower-case) (first rows))
-          data (rest rows)]
+          [headers & data] (map (comp keyword string/lower-case) (first rows))]
       (mapv #(zipmap headers %) data))))
 
 (defn read-cards
