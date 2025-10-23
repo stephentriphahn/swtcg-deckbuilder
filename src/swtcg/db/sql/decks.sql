@@ -22,10 +22,11 @@ INSERT INTO decks (name, owner, format, side)
 VALUES (:name, :owner, :format, :side)
 RETURNING *;
 
--- :name insert-card-to-deck! :! :1
+-- :name insert-card-to-deck! :? :1
 INSERT INTO cards_to_deck (deck_id, card_id, quantity)
 VALUES (:deck-id, :card-id, :quantity)
        ON CONFLICT (deck_id, card_id) DO UPDATE SET quantity=excluded.quantity;
+RETURNING *;
 
 -- :name get-decks :? :*
 SELECT * FROM decks ORDER BY name;

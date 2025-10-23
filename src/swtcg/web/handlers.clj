@@ -27,6 +27,12 @@
   (into {} (map parse-int params)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; request lenses
+(defn req->deck-id
+  [req]
+  (get-in req [:parameters :path :deck-id]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; handlers
 
 (defn list-cards
@@ -44,13 +50,14 @@
 (defn create-deck
   [{:keys [db parameters]}]
   (let [deck (db/add-deck db (:body parameters))]
-    {:status 201
-     :headers {"Location" (str "/api/v1/decks/" (:deck-id deck))}
-     :body deck}))
+    (response/created (str "/api/v1/decks/" (:deck-id deck)) deck)))
 
 (defn get-deck-by-id
-  [{:keys [db parameters]}]
-  {:status 200 :body (deck-service/get-deck db (:deck-id (:path parameters)))})
+  [{:keys [db] :as req}]
+  (->> req
+       req->deck-id
+       (deck-service/get-deck db)
+       response/response))
 
 (defn delete-deck [arg1])
 
@@ -58,15 +65,17 @@
   [db id card-id quantity]
   (db/add-card-to-deck db id card-id quantity))
 
-(defn add-card-to-deck [{:keys [db parameters]}]
+(defn add-card-to-deck
+  [{:keys [db parameters] :as req}]
   (let [{:keys [card-id quantity]} (:body parameters)
-        {:keys [id]} (:path parameters)]
-    {:status 200 :body (add-card db id card-id quantity)}))
+        deck-id (req->deck-id req)]
+    (response/response (add-card db deck-id card-id quantity))))
 
-(defn add-cards-to-deck [{:keys [db parameters]}]
-  (let [cards (:body parameters)
-        {:keys [deck-id]} (:path parameters)]
-    {:status 200 :body (map #(add-card db deck-id (:card-id %) (:quantity %)) cards)}))
+(defn add-cards-to-deck
+  [{:keys [db parameters] :as req}]
+  (let [deck-id (req->deck-id req)
+        db-res (map #(add-card db deck-id (:card-id %) (:quantity %)) (:body parameters))]
+    (response/response db-res)))
 
 (defn remove-card-from-deck [arg1])
 (defn list-decks [arg1])

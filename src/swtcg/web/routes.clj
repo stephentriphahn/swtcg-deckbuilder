@@ -36,12 +36,12 @@
                        :parameters {:path {:deck-id int?}}
                        :handler handlers/get-deck-by-id}
                  :delete {:summary "Delete a deck"
-                          :parameters {:path {:id int?}}
+                          :parameters {:path {:deck-id int?}}
                           :handler handlers/delete-deck}}]
 
    ["/:deck-id/cards" {:post {:summary "Add multiple cards to deck"
                               :parameters {:path {:deck-id int?}
-                                           :body schema/AddCardToDeck}
+                                           :body [:vector schema/AddCardToDeck]}
                               :handler handlers/add-cards-to-deck}}]
 
    ["/:deck-id/cards/:card-id" {:delete {:summary "Remove card from deck"
