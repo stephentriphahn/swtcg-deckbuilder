@@ -17,6 +17,8 @@
   ["/cards" {:swagger {:tags ["cards"]}}
    [""
     {:get {:summary "list all cards in the system"
+           :responses {200 {:body schema/ListCardsResponse
+                            :description "List of cards"}}
            :handler handlers/list-cards}}]
    ["/:id" {:name ::card-by-id}
     ["" {:get {:summary "get a card by id"
