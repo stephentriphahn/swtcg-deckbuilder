@@ -22,7 +22,7 @@
            {:main-opts ["-e" "(require, 'dev)" "-e" "(in-ns 'dev)"]}
 
            :load-cards-sqlite
-           {:exec-fn swtcg.tools.load-cards/load-cards-cli}
+           {:exec-fn stevetrip.swtcg.deck-builder.tools.load-cards/load-cards-cli}
 
            :test
            {:extra-paths ["test"]
