@@ -19,15 +19,20 @@
     {:get {:summary "list all cards in the system"
            :responses {200 {:body schema/ListCardsResponse
                             :description "List of cards"}}
+           :parameters {:query schema/ListQueryParams}
            :handler handlers/list-cards}}]
-   ["/:id" {:name ::card-by-id}
+   ["/:card-id" {:name ::card-by-id}
     ["" {:get {:summary "get a card by id"
-               :parameters {:path {:id number?}}
+               :parameters {:path {:card-id string?}}
+               :responses {200 {:body schema/CardResponse
+                                :description "Card data"}}
                :handler handlers/get-card-by-id}}]]])
+
 (def deck-routes
   ["/decks" {:swagger {:tags ["decks"]}}
 
    ["" {:get {:summary "List all decks"
+              :responses {200 {:body schema/ListDecksResponse}}
               :handler handlers/list-decks}
         :post {:summary "Create a new deck"
                :parameters {:body schema/CreateDeckRequest}
@@ -35,24 +40,26 @@
 
    ["/:deck-id" {:name ::deck-by-id
                  :get {:summary "Get a deck by ID"
-                       :parameters {:path {:deck-id int?}}
+                       :parameters {:path {:deck-id string?}}
+                       :responses {200 {:body schema/DeckResponse}}
                        :handler handlers/get-deck-by-id}
                  :delete {:summary "Delete a deck"
-                          :parameters {:path {:deck-id int?}}
+                          :parameters {:path {:deck-id string?}}
                           :handler handlers/delete-deck}}]
 
    ["/:deck-id/cards" {:post {:summary "Add multiple cards to deck"
-                              :parameters {:path {:deck-id int?}
-                                           :body [:vector schema/AddCardToDeck]}
+                              :parameters {:path {:deck-id string?}
+                                           :body schema/AddCardsToDeckRequest}
                               :handler handlers/add-cards-to-deck}}]
 
    ["/:deck-id/cards/:card-id" {:delete {:summary "Remove card from deck"
-                                         :parameters {:path {:deck-id int?
-                                                             :card-id int?}}
+                                         :parameters {:path {:deck-id string?
+                                                             :card-id string?}}
                                          :handler handlers/remove-card-from-deck}
                                 :put {:summary "Add card to deck"
-                                      :parameters {:path {:card-id int?}
-                                                   :body schema/AddCardToDeck}
+                                      :parameters {:path {:deck-id string?
+                                                          :card-id string?}
+                                                   :body schema/AddCardToDeckRequest}
                                       :handler handlers/add-card-to-deck}}]])
 
 (def routes

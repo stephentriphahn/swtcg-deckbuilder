@@ -1,12 +1,6 @@
 (ns swtcg.db.migratus
   (:require [migratus.core :as migratus]
-            [swtcg.config :as config]
             [swtcg.db.db :as db]))
-
-(def db-config (-> (config/read-config)
-                   config/card-db-cs
-                   db/parse-connection-string
-                   db/parsed-cs->jdbc-config))
 
 (defn cs->migratus-config
   [cs]
@@ -26,9 +20,8 @@
   (migratus/reset (cs->migratus-config cs)))
 
 (comment
-  (def cfg (cs->migratus-config (config/read-config)))
+  (def cfg (cs->migratus-config "sqlite://cards.db"))
   cfg
   (migrate! "sqlite://foo.db")
   (reset-db! "sqlite://cards.db")
-  db-config
   #_())

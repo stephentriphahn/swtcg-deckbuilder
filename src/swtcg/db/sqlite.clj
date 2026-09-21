@@ -26,6 +26,7 @@
 (declare insert-deck!)
 (declare insert-card-to-deck!)
 (declare get-deck-by-id)
+(declare get-decks)
 (declare get-deck-by-name)
 (declare get-deck-cards)
 (declare delete-deck!)
@@ -40,29 +41,36 @@
 (defn- add-deck*
   [db deck]
   (try
-    (insert-deck! db deck)
+    (insert-deck! db (assoc deck :deck-id (str (random-uuid))))
     (catch org.sqlite.SQLiteException e
       (if (re-find #"(?i)unique" (ex-message e))
         (throw
          (error/conflict "A deck with that name already exists."
-                         {:name (-> deck :body :name)}))
+                         {:name (:name deck)}))
         (throw e)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; API
+
+(defn- list-cards*
+  [db opts]
+  (search-cards db opts))
 
 (defrecord SqliteCardDatabase [db]
   db/CardDatabase
   (get-card-by-id [this id]
     (get-card-by-id db {:card-id id}))
   (list-cards [this opts]
-    (search-cards db opts))
+    (list-cards* db opts))
 
   (add-deck [this deck]
     (add-deck* db deck))
 
   (get-deck-by-id [this deck-id]
     (get-deck-by-id db {:deck-id deck-id}))
+
+  (list-decks [this]
+    (get-decks db))
 
   (delete-deck [this deck-id]
     (delete-deck! db {:deck-id deck-id})
@@ -108,6 +116,6 @@
   db
   (:datasource connection)
   (db/get-deck-cards db 1)
-  (db/list-cards db {:side "D" :cost 5 :set_code "AOTC"})
+  (db/list-cards db {:search "critical" :side "L" :set_code "AOTC"})
   (get-card-by-id db {:card_id 1})
   #_())

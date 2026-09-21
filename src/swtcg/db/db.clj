@@ -55,6 +55,7 @@
   (add-deck [this deck] "Creates a new deck. Expects {:name :owner :side}")
   (delete-deck [this deck-id] "Removes a deck from the system.")
   (get-deck-by-id [this deck-id] "Retrieves deck metadata")
+  (list-decks [this] "Returns metadata for all decks")
 
   ;; associating cards with decks
   (get-deck-cards [this deck-id])

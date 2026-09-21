@@ -32,6 +32,9 @@
   [req]
   (get-in req [:parameters :path :deck-id]))
 
+(defn req->path-card-id
+  [req]
+  (get-in req [:parameters :path :card-id]))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; handlers
 
@@ -40,8 +43,8 @@
   (response/response {:cards (db/list-cards db (normalize-opts params))}))
 
 (defn get-card-by-id
-  [{:keys [db path-params]}]
-  (let [id (get-in path-params [:id])
+  [{:keys [db] :as req}]
+  (let [id (req->path-card-id req)
         card (db/get-card-by-id db id)]
     (if-not card
       (throw (error/not-found {:card-id id}))
@@ -59,26 +62,30 @@
        (deck-service/get-deck db)
        response/response))
 
-(defn delete-deck [arg1])
-
-(defn- add-card
-  [db id card-id quantity]
-  (db/add-card-to-deck db id card-id quantity))
+(defn delete-deck
+  [{:keys [db] :as req}]
+  (deck-service/delete-deck db (req->deck-id req))
+  (response/status (response/response nil) 204))
 
 (defn add-card-to-deck
   [{:keys [db parameters] :as req}]
-  (let [{:keys [card-id quantity]} (:body parameters)
-        deck-id (req->deck-id req)]
-    (response/response (add-card db deck-id card-id quantity))))
+  (let [{:keys [quantity]} (:body parameters)]
+    (response/response
+     (deck-service/add-card db (req->deck-id req) (req->path-card-id req) quantity))))
 
 (defn add-cards-to-deck
   [{:keys [db parameters] :as req}]
-  (let [deck-id (req->deck-id req)
-        db-res (map #(add-card db deck-id (:card-id %) (:quantity %)) (:body parameters))]
-    (response/response db-res)))
+  (response/response
+   (deck-service/add-cards db (req->deck-id req) (:body parameters))))
 
-(defn remove-card-from-deck [arg1])
-(defn list-decks [arg1])
+(defn remove-card-from-deck
+  [{:keys [db] :as req}]
+  (deck-service/remove-card db (req->deck-id req) (req->path-card-id req))
+  (response/status (response/response nil) 204))
+
+(defn list-decks
+  [{:keys [db]}]
+  (response/response (deck-service/list-decks db)))
 
 (comment
   (normalize-opts {:foo "2" :bar {:gte "3"}})

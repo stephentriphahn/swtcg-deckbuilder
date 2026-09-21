@@ -1,10 +1,11 @@
 -- Migration: create-cards-table (UP)
 -- :disable-transaction
 CREATE TABLE cards (
-  card_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  -- deterministic short hash of image_file, see swtcg.tools.load-cards/card-id
+  card_id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   set_code TEXT,
-  image_file TEXT,
+  image_file TEXT NOT NULL UNIQUE,
   side TEXT CHECK (side IN ('L', 'D', 'N')) NOT NULL,
   type TEXT,
   subtype TEXT,

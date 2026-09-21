@@ -1,31 +1,12 @@
--- :name create-decks-table :! :n
-CREATE TABLE IF NOT EXISTS decks (
-  deck_id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  owner TEXT NOT NULL,
-  format TEXT NOT NULL,
-  side TEXT CHECK (side IN ('L', 'D')) NOT NULL
-);
-
--- :name create-cards-to-deck-table :! :n
-CREATE TABLE IF NOT EXISTS cards_to_deck (
-  deck_id INTEGER,
-  card_id INTEGER,
-  quantity INTEGER CHECK(quantity BETWEEN 1 AND 4),
-  PRIMARY KEY (deck_id, card_id),
-  FOREIGN KEY (deck_id) REFERENCES decks(deck_id) ON DELETE CASCADE,
-  FOREIGN KEY (card_id) REFERENCES cards(card_id)
-);
-
 -- :name insert-deck! :? :1
-INSERT INTO decks (name, owner, format, side)
-VALUES (:name, :owner, :format, :side)
+INSERT INTO decks (deck_id, name, owner, format, side)
+VALUES (:deck-id, :name, :owner, :format, :side)
 RETURNING *;
 
 -- :name insert-card-to-deck! :? :1
 INSERT INTO cards_to_deck (deck_id, card_id, quantity)
 VALUES (:deck-id, :card-id, :quantity)
-       ON CONFLICT (deck_id, card_id) DO UPDATE SET quantity=excluded.quantity;
+       ON CONFLICT (deck_id, card_id) DO UPDATE SET quantity=excluded.quantity
 RETURNING *;
 
 -- :name get-decks :? :*

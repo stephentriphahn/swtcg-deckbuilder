@@ -1,5 +1,9 @@
 (ns swtcg.tools.load-cards
   (:require [hugsql.core :as hugsql]
+            [hugsql.adapter.next-jdbc :as adapter]
+            [next.jdbc :as jdbc]
+            [next.jdbc.result-set :as rs]
+            [swtcg.db.migratus :as migratus]
             [swtcg.log :as log]
             [clojure.data.csv :as csv]
             [clojure.java.io :as io]
@@ -14,6 +18,15 @@
         (log/warn :card-number-parse-error {:value s})
         -1))))
 
+(defn card-id
+  "Deterministic short id for a card: the first 12 hex chars of the SHA-1 of its
+  image file name. Stable across database rebuilds, so decks keep pointing at
+  the same cards. A collision fails the insert (primary key)."
+  [image-file]
+  (let [digest (.digest (java.security.MessageDigest/getInstance "SHA-1")
+                        (.getBytes ^String image-file "UTF-8"))]
+    (subs (apply str (map #(format "%02x" %) digest)) 0 12)))
+
 (defn process-card [card]
   (try
     (-> card
@@ -24,43 +37,51 @@
         (update :number parse-int)
         (update :usage #(if (empty? %) nil %))
         (update :script #(if (empty? %) nil %))
-      ;; associng to add sql field names, ie set -> set_name and imagefile to image_file
-        (assoc :set_code (:set card))
-        (assoc :image_file (:imagefile card)))
+      ;; associng to add sql param names, ie set -> set-code and imagefile to image-file
+        (assoc :set-code (:set card))
+        (assoc :image-file (:imagefile card))
+        (assoc :card-id (card-id (:imagefile card))))
     (catch Exception e
       (log/error :process-card-error {:card card} e))))
 
 (defn read-tsv [filename]
   (log/info :reading-tsv-file {:filename filename})
   (with-open [reader (io/reader filename)]
-    (let [rows (csv/read-csv reader :separator \tab)
-          [headers & data] (map (comp keyword string/lower-case) (first rows))]
+    ;; card text contains literal double quotes, so disable csv quoting
+    (let [[header & data] (csv/read-csv reader :separator \tab :quote \u0001)
+          headers (map (comp keyword string/lower-case) header)]
       (mapv #(zipmap headers %) data))))
 
 (defn read-cards
   [filename]
   (map process-card (read-tsv filename)))
 
-(hugsql/def-db-fns "swtcg/db/sql/cards.sql")
+(hugsql/def-db-fns "swtcg/db/sql/cards.sql"
+                   {:adapter (adapter/hugsql-adapter-next-jdbc
+                              {:builder-fn rs/as-unqualified-kebab-maps})})
 
 (declare insert-card!)
 (declare get-all-loaded-sets)
 (defonce original-sets #{"AOTC" "SR" "ANH" "BOY" "ESB" "RAS" "JG" "ROTJ" "PM" "ROTS"})
 
 (defn load-cards-cli
-  "Call with a comma separated list of set names to add."
-  [{:keys [sets dbname dbtype]
-    :or {dbtype "sqlite" dbname "cards.db"}}]
-  (let [sets-to-add (if sets (string/split sets #",") original-sets)
-        existing-sets (set (map :set_code (get-all-loaded-sets {:dbname dbname :dbtype dbtype})))
-        insert (partial insert-card! {:dbname dbname :dbtype dbtype})]
-    (mapv
-     (fn [set_code]
-       (if-let [s (existing-sets set_code)]
-         (log/info "skipping set, already loaded" {:set_code s})
-         (mapv insert (read-cards (str "resources/public/sets/" set_code ".txt")))))
-     sets-to-add)))
+  "Migrates the database (creating it if needed), then loads card sets.
+  Options: :sets comma separated set codes (default: original sets),
+  :dbname (default cards.db). Sets already in the database are skipped."
+  [{:keys [sets dbname]
+    :or {dbname "cards.db"}}]
+  (migratus/migrate! (str "sqlite://" dbname))
+  (let [sets-to-add (if sets (string/split (str sets) #",") original-sets)
+        ds (jdbc/get-datasource {:dbtype "sqlite" :dbname dbname})
+        existing-sets (set (map :set-code (get-all-loaded-sets ds)))]
+    (jdbc/with-transaction [tx ds]
+      (doseq [set-code sets-to-add]
+        (if (existing-sets set-code)
+          (log/info :skipping-set-already-loaded {:set-code set-code})
+          (let [cards (read-cards (str "resources/public/sets/" set-code ".txt"))]
+            (run! #(insert-card! tx %) cards)
+            (log/info :loaded-set {:set-code set-code :cards (count cards)})))))))
 
 (comment
-  (load-cards-cli {:dbname "cards.db" :dbtype "sqlite" :sets "BOE,BOH"})
+  (load-cards-cli {:dbname "cards.db" :sets "BOE,BOH"})
   #_())

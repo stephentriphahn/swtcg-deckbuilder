@@ -1,30 +1,9 @@
 -- :name enable-foreign-keys! :! :n
 PRAGMA foreign_keys = ON;
 
--- :name create-cards-table :! :n
-CREATE TABLE IF NOT EXISTS cards (
-  card_id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  set_code TEXT,
-  image_file TEXT,
-  side TEXT CHECK (side IN ('L', 'D', 'N')) NOT NULL,
-  type TEXT,
-  subtype TEXT,
-  cost INTEGER,
-  speed INTEGER,
-  power INTEGER,
-  health INTEGER,
-  rarity TEXT,
-  number INTEGER,
-  usage TEXT,
-  text TEXT,
-  script TEXT,
-  classification TEXT
-);
-
 -- :name insert-card! :! :1
-INSERT INTO cards (name, set_code, image_file, side, type, subtype, cost, speed, power, health, rarity, number, usage, text, script, classification)
-VALUES (:name, :set-code, :image-file, :side, :type, :subtype, :cost, :speed, :power, :health, :rarity, :number, :usage, :text, :script, :classification);
+INSERT INTO cards (card_id, name, set_code, image_file, side, type, subtype, cost, speed, power, health, rarity, number, usage, text, script, classification)
+VALUES (:card-id, :name, :set-code, :image-file, :side, :type, :subtype, :cost, :speed, :power, :health, :rarity, :number, :usage, :text, :script, :classification);
 
 -- :name get-card-by-id :? :1
 SELECT * FROM cards WHERE card_id = :card-id;
@@ -35,7 +14,7 @@ SELECT DISTINCT set_code from cards;
 -- :name get-card-by-name :? :1
 SELECT * FROM cards WHERE name = :name;
 
--- :name search-cards :? :*
+-- :name old-search-cards :? :*
 /* :require [clojure.string :as s] */
 SELECT * FROM cards
 /*~
@@ -44,6 +23,28 @@ SELECT * FROM cards
     (str "WHERE "
       (s/join " AND "
               (for [[field _] params]
-                (str (name field) " = " field))))))
+                (when (and (not= field :skip) (not= field :limitl))
+                  (str (name field) " = " field)))))))
 ~*/
+OFFSET :skip LIMIT :limit
+;
+
+-- :name search-cards :? :*
+/* :require [clojure.string :as s] */
+SELECT * FROM cards
+/*~
+(let [filter-params (dissoc params :skip :limit :search)
+      where-clauses (cond-> []
+                      (seq filter-params)
+                      (into (for [[field _] filter-params]
+                              (str (name field) " = :" (name field))))
+                      
+                      (:search params)
+                      (conj "(name LIKE '%' || :search || '%' OR text LIKE '%' || :search || '%')"))]
+  (when (seq where-clauses)
+    (str "WHERE " (s/join " AND " where-clauses))))
+~*/
+ORDER BY card_id
+/*~ (when (:limit params) "LIMIT :limit") ~*/
+/*~ (when (:skip params) "OFFSET :skip") ~*/
 ;
