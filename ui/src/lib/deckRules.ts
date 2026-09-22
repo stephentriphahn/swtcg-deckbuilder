@@ -24,13 +24,18 @@ export function deckTypeCounts(cards: DeckCard[], index: CardIndex): Record<stri
   return counts
 }
 
-const COST_ORDER = [...Array(10).keys()].map(String).concat('10+', '*')
+const COST_ORDER = [...Array(10).keys()].map(String).concat('10+', '*', '–')
 
-/** Cost buckets 0-9, "10+", and "*" for missing/variable cost, in that display order. */
+/**
+ * Cost buckets 0-9, "10+", "*" for a variable cost (-1 in the DB, e.g. some Characters), and
+ * "–" for no cost at all (null — Battle/Mission/Location/Equipment cards don't have one).
+ * Mirrors `formatStat`'s null/-1 distinction so the same symbols mean the same thing everywhere.
+ */
 export function costCurve(cards: DeckCard[], index: CardIndex): { label: string; count: number }[] {
   const buckets = new Map<string, number>()
   for (const { dc, card } of resolve(cards, index)) {
-    const label = card.cost == null || card.cost < 0 ? '*' : card.cost >= 10 ? '10+' : String(card.cost)
+    const label =
+      card.cost == null ? '–' : card.cost < 0 ? '*' : card.cost >= 10 ? '10+' : String(card.cost)
     buckets.set(label, (buckets.get(label) ?? 0) + dc.quantity)
   }
   return COST_ORDER.filter((l) => buckets.has(l)).map((label) => ({ label, count: buckets.get(label)! }))

@@ -10,7 +10,8 @@ const card = (over: Partial<Card>): Card => ({
 const luke = card({ 'card-id': 'luke', name: 'Luke', side: 'L', cost: 5 })
 const vader = card({ 'card-id': 'vader', name: 'Vader', side: 'D', cost: 9 })
 const xwing = card({ 'card-id': 'xwing', name: 'X-wing', type: 'Space', side: 'L', cost: -1 })
-const index = new Map([luke, vader, xwing].map((c) => [c['card-id'], c]))
+const battle = card({ 'card-id': 'battle', name: 'Battle Fatigue', type: 'Battle', side: 'N', cost: null })
+const index = new Map([luke, vader, xwing, battle].map((c) => [c['card-id'], c]))
 
 const deckCards = (over: DeckCard[]): DeckCard[] => over
 
@@ -40,11 +41,17 @@ describe('deckTypeCounts / costCurve', () => {
       Character: 3, Space: 2,
     })
   })
-  it('buckets cost, with variable/missing as "*"', () => {
-    expect(costCurve(deckCards([{ 'card-id': 'luke', quantity: 1 }, { 'card-id': 'xwing', quantity: 2 }, { 'card-id': 'vader', quantity: 1 }]), index)).toEqual([
+  it('buckets a variable cost (-1) as "*" and no cost at all (null) as "–", kept apart', () => {
+    expect(costCurve(deckCards([
+      { 'card-id': 'luke', quantity: 1 },
+      { 'card-id': 'xwing', quantity: 2 }, // cost -1: variable
+      { 'card-id': 'vader', quantity: 1 },
+      { 'card-id': 'battle', quantity: 2 }, // cost null: Battle cards don't have one
+    ]), index)).toEqual([
       { label: '5', count: 1 },
       { label: '9', count: 1 },
       { label: '*', count: 2 },
+      { label: '–', count: 2 },
     ])
   })
 })
