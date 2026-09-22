@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-SWTCG: backend API (Clojure) for a Star Wars Trading Card Game deck builder and card catalog. It serves card search and deck building/validation over REST (`/api/v1`, Swagger UI at `/docs`; see `API.md`). The frontend and game logic live in separate projects; this repo is only the API. Only the 10 official WOTC sets (AOTC, SR, ANH, BOY, ESB, RAS, JG, ROTJ, PM, ROTS; `original-sets` in `stevetrip.swtcg.deck-builder.tools.load-cards`) are loaded into `cards.db`, so it is the source of truth for whether a card or keyword is official; the other files in `resources/public/sets` are fan-made (IDC) and out of scope. The README is an unfilled template.
+SWTCG: backend API (Clojure) for a Star Wars Trading Card Game deck builder and card catalog. It serves card search and deck building/validation over REST (`/api/v1`, Swagger UI at `/docs`; see `API.md`). The UI lives in `ui/` (React + TypeScript + Vite; plan in `doc/ui-plan.md`, principles in `doc/ui-principles.md`); game logic lives in a separate project. Only the 10 official WOTC sets (AOTC, SR, ANH, BOY, ESB, RAS, JG, ROTJ, PM, ROTS; `original-sets` in `stevetrip.swtcg.deck-builder.tools.load-cards`) are loaded into `cards.db`, so it is the source of truth for whether a card or keyword is official; the other files in `resources/public/sets` are fan-made (IDC) and out of scope. The README is an unfilled template.
 
 ## Commands
 
@@ -13,6 +13,7 @@ SWTCG: backend API (Clojure) for a Star Wars Trading Card Game deck builder and 
 - All tests: `clj -X:test`
 - Single namespace: `clj -X:test :nses '[stevetrip.swtcg.deck-builder.db.db-test]'`; single var: `clj -X:test :vars '[stevetrip.swtcg.deck-builder.db.db-test/some-test]'`
 - Load card data from CSV into SQLite: `clj -X:load-cards-sqlite` (`stevetrip.swtcg.deck-builder.tools.load-cards/load-cards-cli`)
+- UI: `cd ui && npm install && npm run dev` (port 5173, proxies `/api` and `/setimages` to :3000); `npm test`, `npm run build`.
 - New migration: `bb create-migration <kebab-name>` (creates timestamped up/down SQL in `resources/migrations`, run with migratus)
 
 ## Architecture
