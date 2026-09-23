@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { Card } from '../api/types'
-import { cardImageUrl, formatStat, isLandscape, splitText } from '../lib/cards'
+import { cardImageUrl, formatStat, splitText } from '../lib/cards'
 import { RARITY_LABELS, SIDE_LABELS, tagsOf } from '../lib/filters'
 
 interface Props {
@@ -40,16 +40,13 @@ export function CardDetail({ card, onClose, onPrev, onNext }: Props) {
   }, [onPrev, onNext])
 
   const src = cardImageUrl(card)
-  const landscape = isLandscape(card)
   const stats = STATS.filter(([, k]) => card[k] != null)
   const abilities = splitText(card.text)
   const tags = tagsOf(card)
   const subtitle = [card.type, card.subtype].filter(Boolean).join(' · ')
 
-  const imgShape = landscape ? 'w-full aspect-[437/312]' : 'h-full aspect-[312/437]'
-
-  // Fixed dialog size: the image sits in a fixed box (portrait or landscape centred in it), the
-  // details scroll in the middle, and Previous/Next are pinned bottom-right.
+  // Fixed dialog size: the image sits in a fixed box, the details scroll in the middle, and
+  // Previous/Next are pinned bottom-right.
   return (
     <dialog
       ref={ref}
@@ -62,12 +59,12 @@ export function CardDetail({ card, onClose, onPrev, onNext }: Props) {
       className="m-auto h-[min(34rem,92vh)] w-[min(56rem,94vw)] overflow-hidden rounded-xl border border-slate-700 bg-slate-900 p-0 text-slate-100 backdrop:bg-black/70"
     >
       <div className="flex h-full flex-col gap-4 p-5 md:flex-row md:gap-6">
-        <div className="flex h-52 shrink-0 items-center justify-center md:h-full md:w-[24rem]">
-          {src ? (
-            <img src={src} alt={card.name} className={`rounded-lg ${imgShape}`} />
-          ) : (
-            <div className={`rounded-lg bg-slate-800 ${imgShape}`} />
-          )}
+        {/* A fixed square, not a box shaped to either orientation: object-contain then sizes a
+            portrait card by height and a landscape card by width, and since those aspect
+            ratios are exact reciprocals (312:437 / 437:312), the two end up as literally the
+            same rectangle, just transposed — same apparent size either way. */}
+        <div className="flex h-52 w-52 shrink-0 items-center justify-center self-center rounded-lg bg-slate-800 md:h-96 md:w-96">
+          {src && <img src={src} alt={card.name} className="h-full w-full object-contain" />}
         </div>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">

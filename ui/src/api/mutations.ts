@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRef } from 'react'
 import { copyName } from '../lib/decks'
 import { useDeckDraftStore } from '../stores/deckDraft'
-import { addDeckCards, createDeck, deleteDeck, getDeck, removeDeckCard, setDeckCard } from './client'
+import { addDeckCards, createDeck, deleteDeck, getDeck, openPack, removeDeckCard, setDeckCard } from './client'
 import type { Deck, DeckCard, NewDeck } from './types'
 
 const useInvalidateDecks = () => {
@@ -99,4 +99,16 @@ export function useDeckCardControls(deckId: string) {
   const retry = (cardId: string) => send(cardId, quantityOf(cardId))
 
   return { quantityOf, setQuantity, retry }
+}
+
+export function useOpenPack() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ owner, setCode }: { owner: string; setCode: string }) => openPack(owner, setCode),
+    onSuccess: (opening) => {
+      // seed the reveal page's query so it doesn't refetch what we already have
+      qc.setQueryData(['packs', 'openings', opening['opening-id']], opening)
+      qc.invalidateQueries({ queryKey: ['collection'] })
+    },
+  })
 }

@@ -25,6 +25,19 @@ describe('CardDetail', () => {
       'src', '/setimages/RAS/RAS002_Boba_Fett_G.jpg',
     )
   })
+  it('shows portrait and landscape art the same way: unrotated, contained in the same square', () => {
+    render(<CardDetail card={card} onClose={() => {}} />)
+    const portraitImg = screen.getByRole('img', { name: 'Boba Fett (G)' })
+    expect(portraitImg.parentElement).toHaveClass('h-52', 'w-52')
+    expect(portraitImg).toHaveClass('object-contain')
+    expect(portraitImg.className).not.toMatch(/rotate/)
+
+    const battleCard: Card = { ...card, 'card-id': 'b', name: 'Battle Fatigue', type: 'Battle' }
+    render(<CardDetail card={battleCard} onClose={() => {}} />)
+    const battleImg = screen.getByRole('img', { name: 'Battle Fatigue' })
+    expect(battleImg.parentElement).toHaveClass('h-52', 'w-52') // same square as the portrait card
+    expect(battleImg.className).not.toMatch(/rotate/)
+  })
   it('closes via the button and disables missing neighbours', () => {
     const onClose = vi.fn()
     const onNext = vi.fn()

@@ -5,6 +5,7 @@
    [stevetrip.swtcg.deck-builder.db.db :as db]
    [stevetrip.swtcg.deck-builder.db.memory :as memory]
    [stevetrip.swtcg.deck-builder.services.deck-service :as deck-service]
+   [stevetrip.swtcg.deck-builder.services.pack-service :as pack-service]
    [stevetrip.swtcg.deck-builder.web.error :as error]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -86,6 +87,25 @@
 (defn list-decks
   [{:keys [db]}]
   (response/response (deck-service/list-decks db)))
+
+(defn list-packs
+  [_req]
+  (response/response (pack-service/list-packs)))
+
+(defn open-pack
+  [{:keys [db parameters]}]
+  (let [{:keys [owner set-code]} (:body parameters)
+        opening (pack-service/open-pack db owner set-code)]
+    (response/created (str "/api/v1/packs/openings/" (:opening-id opening)) opening)))
+
+(defn get-pack-opening
+  [{:keys [db] :as req}]
+  (response/response
+   (pack-service/get-opening db (get-in req [:parameters :path :opening-id]))))
+
+(defn get-collection
+  [{:keys [db parameters]}]
+  (response/response (pack-service/get-collection db (get-in parameters [:query :owner]))))
 
 (comment
   (normalize-opts {:foo "2" :bar {:gte "3"}})

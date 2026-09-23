@@ -1,6 +1,6 @@
 import { useQueries, useQuery } from '@tanstack/react-query'
 import { compareCards } from '../lib/cards'
-import { fetchAllCards, getDeck, listDecks } from './client'
+import { fetchAllCards, getDeck, getPackOpening, listDecks, listPacks } from './client'
 
 /** Whole catalog, loaded once and sorted; filtering happens client-side. */
 export const useCatalog = () =>
@@ -20,3 +20,8 @@ export const useDeckDetails = (ids: string[]) =>
   useQueries({
     queries: ids.map((id) => ({ queryKey: ['decks', id], queryFn: () => getDeck(id) })),
   })
+
+export const usePacks = () => useQuery({ queryKey: ['packs'], queryFn: listPacks })
+
+export const usePackOpening = (openingId: string) =>
+  useQuery({ queryKey: ['packs', 'openings', openingId], queryFn: () => getPackOpening(openingId) })

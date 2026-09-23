@@ -62,6 +62,31 @@
                                                    :body schema/AddCardToDeckRequest}
                                       :handler handlers/add-card-to-deck}}]])
 
+(def pack-routes
+  ["/packs" {:swagger {:tags ["packs"]}}
+   [""
+    {:get {:summary "List the openable packs, one per official set"
+           :responses {200 {:body schema/ListPacksResponse}}
+           :handler handlers/list-packs}}]
+   ["/open"
+    {:post {:summary "Open a pack: draws its cards, credits them to the owner's collection, and logs the opening"
+            :parameters {:body schema/OpenPackRequest}
+            :responses {201 {:body schema/PackOpeningResponse}}
+            :handler handlers/open-pack}}]
+   ["/openings/:opening-id"
+    {:get {:summary "Re-fetch a previously recorded pack opening"
+           :parameters {:path {:opening-id string?}}
+           :responses {200 {:body schema/PackOpeningResponse}}
+           :handler handlers/get-pack-opening}}]])
+
+(def collection-routes
+  ["/collection" {:swagger {:tags ["collection"]}}
+   [""
+    {:get {:summary "List one owner's collected cards (unhydrated: card-id + quantity owned)"
+           :parameters {:query schema/CollectionQueryParams}
+           :responses {200 {:body schema/ListCollectionResponse}}
+           :handler handlers/get-collection}}]])
+
 (def routes
   [["/heartbeat"
     {:get (fn [req] {:status 200 :body "ok"})}]
@@ -70,7 +95,9 @@
            :handler (swagger/create-swagger-handler)}}]
    ["/api/v1"
     cards-routes
-    deck-routes]])
+    deck-routes
+    pack-routes
+    collection-routes]])
 
 (defn app [db]
   (-> (ring/ring-handler

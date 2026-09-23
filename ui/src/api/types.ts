@@ -67,3 +67,19 @@ export interface NewDeck {
   format: string
   side: 'L' | 'D'
 }
+
+export interface PackSummary {
+  'set-code': string
+  name: string
+  /** Already a full path (e.g. "/packs/AOTC.jpg"), served statically by the API. */
+  image: string
+}
+
+export interface PackOpening {
+  'opening-id': string
+  owner: string
+  'set-code': string
+  'opened-at': string
+  /** Hydrated, in reveal (shuffled) order — not just ids. */
+  cards: Card[]
+}

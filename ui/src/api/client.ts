@@ -1,4 +1,4 @@
-import type { Card, Deck, DeckCard, DeckSummary, NewDeck } from './types'
+import type { Card, Deck, DeckCard, DeckSummary, NewDeck, PackOpening, PackSummary } from './types'
 
 const BASE = '/api/v1'
 
@@ -61,3 +61,12 @@ export const addDeckCards = (deckId: string, cards: DeckCard[]) =>
     method: 'POST',
     body: JSON.stringify(cards),
   })
+
+export const listPacks = () => request<PackSummary[]>('/packs')
+export const openPack = (owner: string, setCode: string) =>
+  request<PackOpening>('/packs/open', {
+    method: 'POST',
+    body: JSON.stringify({ owner, 'set-code': setCode }),
+  })
+export const getPackOpening = (openingId: string) =>
+  request<PackOpening>(`/packs/openings/${openingId}`)

@@ -1,6 +1,8 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import { CatalogPage } from './pages/CatalogPage'
 import { DecksPage } from './pages/DecksPage'
+import { PackRevealPage } from './pages/PackRevealPage'
+import { PacksPage } from './pages/PacksPage'
 import { WorkspacePage } from './pages/WorkspacePage'
 
 const link = ({ isActive }: { isActive: boolean }) =>
@@ -13,12 +15,15 @@ export default function App() {
         <span className="font-bold">SWTCG</span>
         <NavLink to="/cards" className={link}>Cards</NavLink>
         <NavLink to="/decks" className={link}>Decks</NavLink>
+        <NavLink to="/packs" className={link}>Packs</NavLink>
       </nav>
       <Routes>
         <Route path="/" element={<Navigate to="/cards" replace />} />
         <Route path="/cards/:cardId?" element={<CatalogPage />} />
         <Route path="/decks" element={<DecksPage />} />
         <Route path="/decks/:deckId/:cardId?" element={<WorkspacePage />} />
+        <Route path="/packs" element={<PacksPage />} />
+        <Route path="/packs/:openingId" element={<PackRevealPage />} />
       </Routes>
     </>
   )

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import type { NewDeck } from '../api/types'
 import { SIDE_NAMES } from '../lib/decks'
+import { readOwner, writeOwner } from '../lib/owner'
 import { Modal } from './Modal'
 
 interface Props {
@@ -10,15 +11,6 @@ interface Props {
   error?: string
   onSubmit: (deck: NewDeck) => void
   onCancel: () => void
-}
-
-const OWNER_KEY = 'swtcg.owner'
-const readOwner = () => {
-  try {
-    return localStorage.getItem(OWNER_KEY) ?? ''
-  } catch {
-    return ''
-  }
 }
 
 const field = 'w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm focus:border-sky-400 focus:outline-none'
@@ -36,11 +28,7 @@ export function NewDeckDialog({ existingNames, pending, error, onSubmit, onCance
   const submit = (e: FormEvent) => {
     e.preventDefault()
     if (!valid) return
-    try {
-      localStorage.setItem(OWNER_KEY, owner.trim())
-    } catch {
-      /* storage unavailable: owner just isn't remembered */
-    }
+    writeOwner(owner.trim())
     onSubmit({ name: trimmed, owner: owner.trim(), format: format.trim(), side })
   }
 

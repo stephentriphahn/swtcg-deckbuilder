@@ -11,7 +11,10 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
-    proxy: { '/api': api, '/setimages': api },
+    // /packs/{SET}.jpg (pack wrapper art) and /cardback.jpg are also served statically by
+    // the API (routes.clj's file handler root); without proxying them the dev server's SPA
+    // fallback serves index.html for these paths instead (200, but Content-Type: text/html).
+    proxy: { '/api': api, '/setimages': api, '/packs': api, '/cardback.jpg': api },
   },
   test: {
     environment: 'jsdom',

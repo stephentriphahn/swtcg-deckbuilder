@@ -99,3 +99,37 @@
 (def ListCardsResponse
   [:map
    [:cards [:vector CardResponse]]])
+
+(def PackSummary
+  [:map
+   [:set-code :string]
+   [:name :string]
+   [:image :string]])
+
+(def ListPacksResponse
+  [:vector PackSummary])
+
+(def OpenPackRequest
+  [:map
+   [:owner [:string {:min 1}]]
+   [:set-code [:string {:min 1}]]])
+
+(def PackOpeningResponse
+  [:map
+   [:opening-id :string]
+   [:owner :string]
+   [:set-code :string]
+   [:opened-at :string]
+   [:cards [:vector CardResponse]]])
+
+(def CollectionEntry
+  [:map
+   [:card-id :string]
+   [:owned :int]])
+
+(def ListCollectionResponse
+  [:vector CollectionEntry])
+
+(def CollectionQueryParams
+  [:map
+   [:owner [:string {:min 1}]]])

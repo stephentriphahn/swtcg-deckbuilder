@@ -60,7 +60,13 @@
   ;; associating cards with decks
   (get-deck-cards [this deck-id])
   (add-card-to-deck [this deck-id card-id quantity] "Adds or updates a card in a deck.")
-  (remove-card-from-deck [this deck-id card-id] "Removes a card entirely from a deck."))
+  (remove-card-from-deck [this deck-id card-id] "Removes a card entirely from a deck.")
+
+  ;; packs & collection
+  (list-cards-by-set-and-rarity [this set-code rarity] "Cards of one rarity in one set, to draw a pack from.")
+  (record-pack-opening [this opening] "Atomically logs a pack opening and credits its cards to the owner's collection. Expects {:owner :set-code :cards}, :cards an ordered vector of card-id strings (the reveal order). Returns {:opening-id :owner :set-code :card-ids :opened-at}.")
+  (get-pack-opening-by-id [this opening-id] "Retrieves a previously recorded pack opening, or nil.")
+  (get-collection [this owner] "Returns [{:card-id :owned}] for everything the owner has collected."))
 
 (defmulti create-database
   "Create database implementation from connection"
