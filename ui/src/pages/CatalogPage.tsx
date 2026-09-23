@@ -1,10 +1,12 @@
 import { useMemo } from 'react'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useCatalog } from '../api/queries'
+import type { CardType } from '../api/types'
 import { CardDetail } from '../components/CardDetail'
 import { CardGrid } from '../components/CardGrid'
 import { CardTile } from '../components/CardTile'
 import { FilterBar } from '../components/FilterBar'
+import { TypeNav } from '../components/TypeNav'
 import { applyFilters, facetCounts, parseFilters, serializeFilters, type Filters } from '../lib/filters'
 
 // The open card is the `:cardId` route param, so a card is deep-linkable and back closes it.
@@ -29,6 +31,10 @@ export function CatalogPage() {
 
   // replace: filter tweaks shouldn't fill the history stack with one entry per keystroke
   const onChange = (next: Filters) => setParams(serializeFilters(next), { replace: true })
+  // A tab, not a chip: picking a type replaces the selection instead of adding to it, and
+  // clicking the active one again (or "All types") clears it.
+  const selectType = (type: CardType | null) =>
+    onChange({ ...filters, types: type && filters.types[0] !== type ? [type] : [] })
 
   // Opening pushes a history entry; prev/next replace it so one Back closes the modal.
   const close = () =>
@@ -39,25 +45,37 @@ export function CatalogPage() {
   }
 
   return (
-    <>
-      <FilterBar
-        filters={filters}
-        onChange={onChange}
-        counts={counts!}
-        resultCount={results.length}
-        totalCount={data.length}
-      />
-      <div className="@container p-6">
-        {results.length === 0 ? (
-          <p className="text-slate-400">No cards match these filters.</p>
-        ) : (
-          <CardGrid>
-            {results.map((c) => (
-              <CardTile key={c['card-id']} card={c} to={`/cards/${c['card-id']}${search}`} />
-            ))}
-          </CardGrid>
-        )}
+    <div className="flex flex-1">
+      <aside className="sticky top-0 max-h-screen w-40 shrink-0 self-start overflow-y-auto border-r border-slate-800 p-3">
+        <TypeNav
+          selected={filters.types[0] ?? null}
+          counts={counts!.types}
+          onSelect={selectType}
+        />
+      </aside>
+
+      <div className="min-w-0 flex-1">
+        <FilterBar
+          filters={filters}
+          onChange={onChange}
+          counts={counts!}
+          resultCount={results.length}
+          totalCount={data.length}
+          showTypeFilter={false}
+        />
+        <div className="@container p-6">
+          {results.length === 0 ? (
+            <p className="text-slate-400">No cards match these filters.</p>
+          ) : (
+            <CardGrid>
+              {results.map((c) => (
+                <CardTile key={c['card-id']} card={c} to={`/cards/${c['card-id']}${search}`} />
+              ))}
+            </CardGrid>
+          )}
+        </div>
       </div>
+
       {cardId &&
         (open ? (
           <CardDetail
@@ -73,6 +91,6 @@ export function CatalogPage() {
             <Link className="underline" to={{ pathname: '/cards', search }}>Back to cards</Link>
           </p>
         ))}
-    </>
+    </div>
   )
 }

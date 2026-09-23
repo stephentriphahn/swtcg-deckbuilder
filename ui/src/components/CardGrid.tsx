@@ -9,7 +9,7 @@ import type { ReactNode } from 'react'
  */
 export function CardGrid({ children }: { children: ReactNode }) {
   return (
-    <div className="grid grid-flow-dense grid-cols-2 items-start gap-x-4 gap-y-6 @lg:grid-cols-3 @3xl:grid-cols-4 @5xl:grid-cols-6 @7xl:grid-cols-8">
+    <div className="grid grid-flow-dense grid-cols-2 items-start gap-x-4 gap-y-6 @lg:grid-cols-3 @3xl:grid-cols-4 @6xl:grid-cols-5 @[100rem]:grid-cols-6">
       {children}
     </div>
   )

@@ -55,7 +55,7 @@ UX principles are in [`ui-principles.md`](ui-principles.md); this plan reference
 - Same `CardTile` and `FilterBar` in both modes (P1).
 - **Adding never navigates (P3).** The tile updates in place: in-deck badge, +/− stepper, dimmed when at 4 copies or on the wrong side.
 - **Persistent deck tray (P4)**, visible in the catalog: size `37/60`, mini cost curve, type meters against the 12/12/12 minimums, copies-in-deck per card. `/cards` with no deck is pure browse; choosing an active deck turns the tray on.
-- **Inline legality (P5):** each tile shows in-deck count and whether another copy is legal (max 4, side mismatch, deck full). Ownership is deferred: tiles and tray keep a slot for "owned N", and a future `collection` table + endpoints is a P2 API item. MVP treats the whole official pool as available.
+- **Inline legality (P5):** each tile shows in-deck count and whether another copy is legal (max 4, side mismatch, deck full). Ownership is deferred: tiles and tray keep a slot for "owned N", and a future `collection` table + endpoints is a P2 API item — now designed in [`pack-opening-design.md`](pack-opening-design.md). MVP treats the whole official pool as available.
 - Catalog is pre-filtered to the deck's side + Neutral, with a one-click override.
 
 ### Build mode
@@ -102,7 +102,7 @@ At 1324 cards, fetch the whole catalog once (pages of 100) into an in-memory ind
 | P1 | Deck endpoint with hydrated cards (`?expand=cards`), and `POST /decks/validate` for drafts. |
 | P1 | Cards: `sort`/`order`, total count, `rarity` / cost / power / health / `subtype` filters, `/cards/facets`. Optional for MVP given §7. |
 | P1 | Return an explicit image URL, or document the convention. |
-| P2 | Env-driven CORS origins; parsed classification (faction/era) tags; cleaned subtypes; `warnings` rules; `collection` table + endpoints. |
+| P2 | Env-driven CORS origins; parsed classification (faction/era) tags; cleaned subtypes; `warnings` rules; `collection` table + endpoints (see [`pack-opening-design.md`](pack-opening-design.md)). |
 
 ## 10. Phases
 

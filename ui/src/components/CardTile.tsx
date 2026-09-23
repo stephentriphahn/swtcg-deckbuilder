@@ -4,11 +4,13 @@ import type { Card } from '../api/types'
 import { cardImageUrl, isLandscape } from '../lib/cards'
 
 /**
- * Portrait cards take one grid column; landscape cards take two. At equal image height a
- * landscape card is ~2x as wide as a portrait one (437/312 vs 2 x 312/437), so both fit the
- * same rows. `footer`, if given, sits below the image (not over the art) and is the same for
- * every tile in a grid, so it doesn't disturb that row-height match. Place tiles in a
- * `CardGrid`, which packs them densely.
+ * Portrait cards take one grid column and scale with it, since the columns are already sized
+ * for them. Landscape cards span two columns to fit their wider aspect ratio, but with the type
+ * nav it's easy to end up viewing landscape types (Battle/Mission/Location/Equipment) alone, at
+ * which point two wide columns is most of the row — so landscape is capped at a fixed max width
+ * (`justify-self-start` keeps it from stretching to fill the rest of its two-column cell) rather
+ * than growing however wide the grid's columns happen to be. `footer`, if given, sits below the
+ * image (not over the art). Place tiles in a `CardGrid`, which packs them densely.
  */
 export function CardTile({ card, to, footer }: { card: Card; to?: string; footer?: ReactNode }) {
   const src = cardImageUrl(card)
@@ -31,7 +33,7 @@ export function CardTile({ card, to, footer }: { card: Card; to?: string; footer
     <div className={imageCls}>{image}</div>
   )
   return (
-    <div className={landscape ? 'col-span-2' : undefined}>
+    <div className={landscape ? 'col-span-2 max-w-96 justify-self-start' : undefined}>
       {imageBox}
       {footer}
     </div>

@@ -11,11 +11,15 @@ interface Props {
   counts: Record<FacetKey, Map<string, number>>
   resultCount: number
   totalCount: number
+  /** Hide the Type group — set this where a dedicated type nav (e.g. TypeNav) replaces it. */
+  showTypeFilter?: boolean
 }
 
 const toggle = <T,>(xs: T[], x: T) => (xs.includes(x) ? xs.filter((y) => y !== x) : [...xs, x])
 
-export function FilterBar({ filters, onChange, counts, resultCount, totalCount }: Props) {
+export function FilterBar({
+  filters, onChange, counts, resultCount, totalCount, showTypeFilter = true,
+}: Props) {
   const [open, setOpen] = useState(false)
   const active = activeFilters(filters)
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch })
@@ -122,7 +126,7 @@ export function FilterBar({ filters, onChange, counts, resultCount, totalCount }
           className="absolute inset-x-0 top-full max-h-[60vh] space-y-3 overflow-y-auto border-b border-slate-700 bg-slate-900 px-6 py-4 shadow-2xl"
         >
           <div className="space-y-1.5">
-            {group('Type', 'types', TYPES, filters.types, 'types')}
+            {showTypeFilter && group('Type', 'types', TYPES, filters.types, 'types')}
             {group('Set', 'sets', SETS, filters.sets, 'sets')}
             {group('Rarity', 'rarities', RARITIES, filters.rarities, 'rarities', (v) => RARITY_LABELS[v])}
           </div>
