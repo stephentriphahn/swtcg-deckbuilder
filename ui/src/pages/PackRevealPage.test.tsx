@@ -36,7 +36,9 @@ beforeEach(() => {
 describe('PackRevealPage', () => {
   it('shows the set, owner, and every card drawn', async () => {
     renderPage()
-    expect(await screen.findByRole('heading', { name: 'ANH pack' })).toBeInTheDocument()
+    // PackFlipModal also shows "ANH pack" (as its intro step's h2), covering the page on
+    // mount — this is the page's own h1, underneath.
+    expect(await screen.findByRole('heading', { name: 'ANH pack', level: 1 })).toBeInTheDocument()
     expect(screen.getByText('Opened by steve')).toBeInTheDocument()
     expect(screen.getByText('Luke')).toBeInTheDocument()
     expect(screen.getByText('Vader')).toBeInTheDocument()

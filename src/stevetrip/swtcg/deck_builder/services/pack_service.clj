@@ -65,11 +65,13 @@
 (defn open-pack
   "Draws a pack for `set-code`, credits every card to `owner`'s collection, and logs
   the opening — all in one transaction (db.sqlite/open-pack*). Returns the opening with
-  its cards hydrated, in reveal (shuffled) order."
+  its cards hydrated, in reveal order: all 7 commons, then the 3 uncommons, then the rare
+  last, matching pack-composition's own order — the UI reveals one at a time in this order,
+  building up to the rare (not a full shuffle across rarities)."
   [db owner set-code]
   (require-official-set! set-code)
-  (let [card-ids (shuffle (mapcat (fn [[rarity n]] (draw-rarity db set-code rarity n))
-                                  pack-composition))
+  (let [card-ids (vec (mapcat (fn [[rarity n]] (draw-rarity db set-code rarity n))
+                               pack-composition))
         opening (swtcg-db/record-pack-opening db {:owner owner :set-code set-code :cards card-ids})]
     (opening->response db opening)))
 

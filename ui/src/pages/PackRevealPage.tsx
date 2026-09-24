@@ -4,14 +4,17 @@ import { usePackOpening } from '../api/queries'
 import { CardDetail } from '../components/CardDetail'
 import { CardGrid } from '../components/CardGrid'
 import { CardTile } from '../components/CardTile'
+import { PackFlipModal } from '../components/PackFlipModal'
 
-// Phase 2 stub: proves the picker -> open -> reveal loop end to end, cards already face up.
-// Phase 3 replaces the grid below with the real face-down layout and one-at-a-time flip; the
-// modal (for actually reading a card, landscape ones especially) carries over as-is.
+// The grid (all 11 cards, already face up) sits underneath from the start — PackFlipModal
+// covers it until it's dismissed (finished or skipped), same as CardDetail overlays the
+// catalog grid. A refresh replays the flip-through rather than resuming mid-reveal (see
+// doc/pack-opening-design.md §7): nothing about the collection itself depends on it.
 export function PackRevealPage() {
   const { openingId = '' } = useParams()
   const { data: opening, isPending, error } = usePackOpening(openingId)
   const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const [flipDone, setFlipDone] = useState(false)
 
   if (isPending) return <p className="p-6">Loading pack…</p>
   if (error) return <p className="p-6 text-red-400">Failed to load pack: {error.message}</p>
@@ -51,6 +54,7 @@ export function PackRevealPage() {
           onNext={step(1)}
         />
       )}
+      {!flipDone && <PackFlipModal opening={opening} onClose={() => setFlipDone(true)} />}
     </div>
   )
 }

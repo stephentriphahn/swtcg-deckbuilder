@@ -50,7 +50,7 @@ New namespace `stevetrip.swtcg.deck-builder.services.pack-service`, alongside `d
 **Generation** — for a given `set-code`:
 1. Query `cards` for that set, split into three pools by `rarity` (C/U/R), excluding `NULL` rarity (promos).
 2. Draw 7 from the common pool, 3 from uncommon, 1 from rare — **with replacement** (a real booster can, and often does, repeat a common), each draw uniform-random within its pool.
-3. Shuffle the 11 into a single reveal order (real packs aren't sorted by rarity when you flip them over).
+3. Order the 11 by rarity — commons, then uncommons, then the rare last — matching `pack-composition`'s own order. (Revised from an earlier full shuffle: the UI reveals one card at a time and deliberately builds up to the rare, so grouped order is the point, not an oversight.)
 4. Persist: upsert each drawn card into `collection_cards` (increment quantity), insert one `pack_openings` row.
 
 ```sql
@@ -86,13 +86,19 @@ A third top-level page, alongside Cards and Decks — a `Packs` link in `App.tsx
 - A row/grid of the 10 pack-wrapper images (`/packs/{SET}.jpg`), tall cards, set name beneath each. Clicking one calls `POST /packs/open` and navigates to `/packs/:openingId`.
 - Simple wrapper "tear open" hover/press affordance (scale + shadow on hover) — no animation needed before the flip screen; the fun part is the reveal.
 
-**`/packs/:openingId` — the reveal**
-- Fetches the opening (from the create response, or `GET /packs/openings/:id` on a refresh) and lays out 11 face-down cards, `cardback.jpg`, in a simple grid (no need for `CardGrid`'s landscape/portrait handling here — every pack card and the back image are all portrait).
-- **Flip interaction**: click a face-down card → it flips to reveal the real card art via a CSS 3D transform (`transform-style: preserve-3d`, back face is `cardback.jpg`, front face is the card's own image via the existing `cardImageUrl` helper, rotate on `:hover`/click via `rotateY(180deg)` with `transition`). One card flips at a time per click — no auto-cascade — matching "click on them and they flip over one at a time."
-- Rarity is revealed with the flip (a small badge appears once flipped: Common/Uncommon/Rare, using the existing `RARITY_LABELS`), so the rare card's reveal has a little extra weight — a slightly longer flip duration or a subtle glow/shimmer on `rarity: R` is a nice, cheap payoff (CSS only, no extra asset).
-- A "Reveal all" button for people who don't want to click 11 times, and an "Open another pack" button once all 11 are flipped, going back to `/packs`.
-- New components: `PackTile` (wrapper art + set name), `PackCard` (the flip mechanic itself — image/cardback front/back), `PackRevealPage`. New lib: `lib/packs.ts` (fetch + flip-state helpers), matching the existing `api/client.ts` / `api/queries.ts` split.
-- State: which of the 11 are flipped is pure local UI state (`useState<Set<cardId>>`), not synced anywhere — there's nothing to persist about *viewing* order, only the (already-persisted) draw itself.
+**`/packs/:openingId` — the reveal.** Done, revised from the original one-grid-of-11 plan below to a sequential "thumb through the pack" flow:
+- `PackRevealPage` renders the plain grid of all 11 cards (already face up — same as before) with `PackFlipModal` covering it on top, same relationship as `CardDetail` overlaying the catalog grid. Closing the modal (finishing or skipping) just reveals the grid underneath; nothing re-fetches.
+- **`PackFlipModal`** is a single dialog that pages through one step at a time: the pack wrapper art first ("click to open"), then **only the first card** is face-down (`cardback.jpg`) and flips on click — matching how a real pack works: you flip the whole stack over once, and every card after that is already face up, just sitting under the one in front of it. So card 2 onward shows immediately (a quick slide-in, not a flip) on "Next card," in reveal order — **all 7 commons, then the 3 uncommons, then the rare last** (§4's `open-pack` no longer shuffles across rarities, on purpose — see the note there). The rare's reveal gets a small ring/glow (`rarity: 'R'`) — the "cheap payoff" this doc originally suggested landed here instead of a rarity badge, since revealing a card already shows its rarity via the same info panel as `CardDetail`.
+- **`FlipCard`** is the reusable 3D-flip primitive, used once, for the first card only: a `transform-style: preserve-3d` box with two `backface-visibility: hidden` faces, the revealed face pre-rotated 180° so it lands right-side up when the whole box flips. Cards 2–11 skip it entirely and just fade/slide in (a `pack-card-in` CSS keyframe, retriggered by remounting the element keyed on card id).
+- Once a card is flipped, it's shown with **`CardInfoPanel`** — extracted out of `CardDetail` so a card looks identical whether you found it in the catalog or just pulled it from a pack. This is deliberately the "first pass" per this conversation; a closer-to-the-metal presentation (bigger art, more theatrical reveal) is future work, not designed here.
+- A "Skip" (×) control closes the modal from any step. Keyboard: Enter/Space/→ advance (flip, or move to the next card), same action as clicking.
+- No flip state is persisted (matches §7's decision): a refresh replays the modal from the pack art, since the cards themselves were already credited to the collection the instant the pack was opened.
+
+<details><summary>Original plan (superseded above)</summary>
+
+Fetches the opening and lays out 11 face-down cards in a simple grid, each independently clickable/flippable, plus a "Reveal all" button — no forced order, no single-flip-at-a-time state machine. Superseded once "page through the pack, in rarity order, using one flip element" was specified.
+
+</details>
 
 ## 6. Collection → catalog integration
 
@@ -116,5 +122,5 @@ Still open, not blocking:
 
 1. **Backend**: migration, `pack-service`, `GET /packs`, `POST /packs/open`, `GET /collection` (unhydrated first, hydrate once the deck-hydration gap is fixed for both). Tests mirror `deck-service`'s (a full open updates `collection_cards` correctly; drawing respects rarity counts; concurrent opens don't clobber each other's quantity — transaction test).
 2. **Pack picker** (`/packs`): the 10 wrappers, `POST` + navigate.
-3. **Reveal page**: face-down grid, click-to-flip, rarity badge on flip, "reveal all"/"open another."
+3. **Reveal.** Done, as described in §5: `PackFlipModal` (one flip element, paged through in rarity order) over the plain grid, plus "Open another pack."
 4. **Collection integration**: `useCollection`, owned badge on `CardTile`, `/collection` view.

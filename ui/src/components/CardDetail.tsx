@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { Card } from '../api/types'
-import { cardImageUrl, formatStat, splitText } from '../lib/cards'
-import { RARITY_LABELS, SIDE_LABELS, tagsOf } from '../lib/filters'
+import { cardImageUrl } from '../lib/cards'
+import { CardInfoPanel } from './CardInfoPanel'
 
 interface Props {
   card: Card
@@ -10,10 +10,6 @@ interface Props {
   onPrev?: () => void
   onNext?: () => void
 }
-
-const STATS = [
-  ['Cost', 'cost'], ['Speed', 'speed'], ['Power', 'power'], ['Health', 'health'],
-] as const
 
 /** Modal card view built on a native <dialog>: focus trap, Escape and inert background for free. */
 export function CardDetail({ card, onClose, onPrev, onNext }: Props) {
@@ -40,10 +36,6 @@ export function CardDetail({ card, onClose, onPrev, onNext }: Props) {
   }, [onPrev, onNext])
 
   const src = cardImageUrl(card)
-  const stats = STATS.filter(([, k]) => card[k] != null)
-  const abilities = splitText(card.text)
-  const tags = tagsOf(card)
-  const subtitle = [card.type, card.subtype].filter(Boolean).join(' · ')
 
   // Fixed dialog size: the image sits in a fixed box, the details scroll in the middle, and
   // Previous/Next are pinned bottom-right.
@@ -68,51 +60,20 @@ export function CardDetail({ card, onClose, onPrev, onNext }: Props) {
         </div>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <div className="flex shrink-0 items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h2 id="card-detail-title" className="text-2xl font-semibold leading-tight">{card.name}</h2>
-              <p className="text-slate-400">{subtitle}</p>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close"
-              className="rounded-md px-2 py-1 text-xl leading-none text-slate-400 hover:bg-slate-800 hover:text-white"
-            >
-              ×
-            </button>
-          </div>
-
-          <div className="mt-3 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-            <p className="text-sm text-slate-300">
-              {card['set-code']}
-              {card.number != null && ` #${card.number}`} · {RARITY_LABELS[card.rarity]} · {SIDE_LABELS[card.side]}
-              {tags.length > 0 && <span className="text-slate-500"> · {tags.join(', ')}</span>}
-            </p>
-
-            {stats.length > 0 && (
-              <dl className="flex flex-wrap gap-2">
-                {stats.map(([label, k]) => (
-                  <div key={k} className="min-w-16 rounded-md bg-slate-800 px-3 py-1.5 text-center">
-                    <dt className="text-xs uppercase tracking-wide text-slate-400">{label}</dt>
-                    <dd className="text-lg font-semibold">{formatStat(card[k])}</dd>
-                  </div>
-                ))}
-              </dl>
-            )}
-
-            {abilities.length > 0 && (
-              <ul className="space-y-1.5">
-                {abilities.map((a, i) => (
-                  <li key={i} className="rounded-md bg-slate-800/60 px-3 py-1.5 text-sm">{a}</li>
-                ))}
-              </ul>
-            )}
-
-            {card.usage && (
-              <p className="border-l-2 border-slate-700 pl-3 text-sm text-slate-400">{card.usage}</p>
-            )}
-          </div>
+          <CardInfoPanel
+            card={card}
+            titleId="card-detail-title"
+            headerActions={
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="rounded-md px-2 py-1 text-xl leading-none text-slate-400 hover:bg-slate-800 hover:text-white"
+              >
+                ×
+              </button>
+            }
+          />
 
           <div className="mt-3 flex shrink-0 justify-end gap-2">
             <button

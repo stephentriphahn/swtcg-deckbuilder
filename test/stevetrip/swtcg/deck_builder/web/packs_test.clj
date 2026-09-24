@@ -75,6 +75,10 @@
              (frequencies (map :card-id (:cards body)))))
       (is (every? #(= "Character" (:type %)) (:cards body))))
 
+    (testing "reveal order is grouped by rarity — commons, then uncommons, then the rare last"
+      (is (= (concat (repeat 7 common) (repeat 3 uncommon) [rare])
+             (map :card-id (:cards body)))))
+
     (testing "credits the owner's collection"
       (let [collection (:body (call :get "/api/v1/collection?owner=steve"))]
         (is (= {common 7, uncommon 3, rare 1}
