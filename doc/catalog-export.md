@@ -1,8 +1,10 @@
 # Catalog export script — plan
 
-Status: **planned, not implemented.** Written from the `swtcg-game-engine` side (its slice 2 needs this
-script's output) after reading this project's schema, load path, and real card data directly - not just
-from `architecture.md`'s existing description. Companion doc there: `../swtcg-game-engine/doc/slice-2-plan.md`
+Status: **implemented.** `tools/export_catalog.clj` (`clj -X:export-catalog`) writes
+`resources/catalog-export.edn`; see "Implementation notes" at the end for what changed from this plan
+while building it. Originally written from the `swtcg-game-engine` side (its slice 2 needs this script's
+output) after reading this project's schema, load path, and real card data directly - not just from
+`architecture.md`'s existing description. Companion doc there: `../swtcg-game-engine/doc/slice-2-plan.md`
 (what the engine does with this script's output). This doc only specifies what the *export script* should
 do, in this project; the engine-side interpretation (type/subtype parsing, side mapping, etc.) is
 deliberately not this script's job - see "Not this script's job" at the end.
@@ -139,3 +141,29 @@ from `name`, and any deck-legality logic all stay out of this script, in the eng
 `catalog.clj` adapter (or, for legality, in this project's own validators, already separate). This script
 gets accurate, clean, raw-shaped data out of `cards.db` and into EDN; it doesn't decide what any of it
 *means* for gameplay.
+
+## Implementation notes
+
+- **Encoding fix applied, rebuild skipped.** `read-tsv` now opens with `:encoding "windows-1252"`. All 10
+  `original-sets` TSVs were checked byte-for-byte and contain zero bytes outside 7-bit ASCII (confirmed with
+  `LC_ALL=C grep -cP '[\x80-\xFF]'` per set file, and directly for `0x96`) - the corruption this fix
+  prevents only exists in fan-made sets (e.g. `15TH.txt`'s "Lando Calrissian's Charm (A)") that
+  `original-sets` never loads. So the encoding change is real and now in place for whenever a wider load
+  happens, but the already-loaded `cards.db` (1324 rows across the 10 official sets, checked directly - not
+  the 0-byte file this doc originally found) needed no rebuild: reloading with the new charset would
+  produce byte-identical text for every row.
+- **Script location**: `src/stevetrip/swtcg/deck_builder/tools/export_catalog.clj`, `-cli` entry fn
+  `export-catalog-cli`, `deps.edn` alias `:export-catalog`. Options `:dbname` (default `cards.db`) and
+  `:out-path` (default `resources/catalog-export.edn`).
+- **Output format**: `{:cards [...]}`, one `pr-str`'d card map per line (not full `clojure.pprint`, which
+  would indent every key of every map) - a middle ground that's still one-line-per-card diffable without
+  the overhead of fully nested pretty-printing across ~1300 maps.
+- **Verified** (`clj -X:export-catalog`, 2026-09-24): 1324 cards written, 0 filtered by the side check,
+  round-trips through `clojure.edn/read-string` back to 1324. "Vader's Call" (`ESB136`, the raw TSV's one
+  `Cost = "X"` row in the official sets) exports `:cost nil`. The doc's other two spot-check cards -
+  "Lando Calrissian's Charm (A)" and "Old Republic Strike Team (A)" - both turned out to live only in
+  `15TH.txt`, a fan-made promo set outside `original-sets`, so neither is actually in `cards.db`; the
+  official sets have no `type` value containing `/` at all (`SELECT DISTINCT type` is just `Character`,
+  `Ground`, `Space`, `Battle`, `Equipment`, `Location`, `Mission`), so that particular check doesn't apply
+  to this project's real data, though the export still passes whatever `type` text is present straight
+  through unparsed, per "Not this script's job".

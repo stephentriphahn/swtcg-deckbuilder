@@ -46,7 +46,12 @@
 
 (defn read-tsv [filename]
   (log/info :reading-tsv-file {:filename filename})
-  (with-open [reader (io/reader filename)]
+  ;; Windows-1252, not the default UTF-8: at least one set's raw bytes contain a 0x96
+  ;; (Windows-1252 EN DASH) inside Subtype/Type text, which isn't valid UTF-8 on its own
+  ;; and would otherwise be silently decoded as the Unicode replacement character.
+  ;; Windows-1252 is a superset of ISO-8859-1 everywhere else, so it's the strictly safer
+  ;; choice of the two for whatever else these TSVs contain.
+  (with-open [reader (io/reader filename :encoding "windows-1252")]
     ;; card text contains literal double quotes, so disable csv quoting
     (let [[header & data] (csv/read-csv reader :separator \tab :quote \u0001)
           headers (map (comp keyword string/lower-case) header)]

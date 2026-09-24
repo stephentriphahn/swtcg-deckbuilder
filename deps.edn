@@ -24,6 +24,9 @@
            :load-cards-sqlite
            {:exec-fn stevetrip.swtcg.deck-builder.tools.load-cards/load-cards-cli}
 
+           :export-catalog
+           {:exec-fn stevetrip.swtcg.deck-builder.tools.export-catalog/export-catalog-cli}
+
            :test
            {:extra-paths ["test"]
             :extra-deps {io.github.cognitect-labs/test-runner {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
