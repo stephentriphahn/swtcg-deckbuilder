@@ -4,7 +4,7 @@ import { cardImageUrl, compareCards, formatStat, isLandscape, splitText } from '
 
 const card = (over: Partial<Card>): Card => ({
   'card-id': 'x', name: 'A', type: 'Character', side: 'L',
-  'set-code': 'AOTC', number: 1, rarity: 'C', ...over,
+  'set-code': 'AOTC', number: 1, rarity: 'C', 'is-supported': true, ...over,
 })
 
 describe('cards helpers', () => {

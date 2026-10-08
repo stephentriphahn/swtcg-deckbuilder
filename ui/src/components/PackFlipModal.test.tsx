@@ -4,7 +4,8 @@ import type { Card, PackOpening } from '../api/types'
 import { PackFlipModal } from './PackFlipModal'
 
 const card = (over: Partial<Card>): Card => ({
-  'card-id': 'a', name: 'Luke', type: 'Character', side: 'L', 'set-code': 'ANH', number: 1, rarity: 'C', ...over,
+  'card-id': 'a', name: 'Luke', type: 'Character', side: 'L', 'set-code': 'ANH', number: 1, rarity: 'C',
+  'is-supported': true, ...over,
 })
 
 const opening: PackOpening = {

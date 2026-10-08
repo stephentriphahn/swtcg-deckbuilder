@@ -27,6 +27,9 @@
            :export-catalog
            {:exec-fn stevetrip.swtcg.deck-builder.tools.export-catalog/export-catalog-cli}
 
+           :ingest-supported-cards
+           {:exec-fn stevetrip.swtcg.deck-builder.tools.ingest-supported-cards/ingest-supported-cards-cli}
+
            :test
            {:extra-paths ["test"]
             :extra-deps {io.github.cognitect-labs/test-runner {:git/tag "v0.5.1" :git/sha "dfb30dd"}}

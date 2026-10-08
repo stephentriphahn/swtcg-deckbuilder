@@ -8,7 +8,7 @@ const card: Card = {
   'set-code': 'RAS', number: 2, rarity: 'R', cost: 9, speed: 70, power: 7, health: -1,
   text: 'Upkeep: Pay 1 build point. | Armor | Bounty: 1 build point.',
   usage: 'Only triggers after damage counters are placed.',
-  classification: 'WOTC, REB, EP456', 'image-file': 'RAS002_Boba_Fett_G',
+  classification: 'WOTC, REB, EP456', 'image-file': 'RAS002_Boba_Fett_G', 'is-supported': true,
 }
 
 describe('CardDetail', () => {

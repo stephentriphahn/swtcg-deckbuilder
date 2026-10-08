@@ -4,7 +4,8 @@ import { canAddCopy, costCurve, deckTypeCounts, precheckViolations } from './dec
 
 let n = 0
 const card = (over: Partial<Card>): Card => ({
-  'card-id': `c${n++}`, name: 'Card', type: 'Character', side: 'L', 'set-code': 'ANH', number: n, rarity: 'C', ...over,
+  'card-id': `c${n++}`, name: 'Card', type: 'Character', side: 'L', 'set-code': 'ANH', number: n, rarity: 'C',
+  'is-supported': true, ...over,
 })
 
 const luke = card({ 'card-id': 'luke', name: 'Luke', side: 'L', cost: 5 })

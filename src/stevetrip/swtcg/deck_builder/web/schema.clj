@@ -32,7 +32,9 @@
    [:script {:optional true} [:maybe :string]]
    [:usage {:optional true} [:maybe :string]]
    [:classification {:optional true} [:maybe :string]]
-   [:image-file {:optional true} [:maybe :string]]])
+   [:image-file {:optional true} [:maybe :string]]
+   ;; whether every printed keyword/ability on this card is implemented by swtcg-game-engine
+   [:is-supported :boolean]])
 
 (def AddCardToDeckRequest
   [:map

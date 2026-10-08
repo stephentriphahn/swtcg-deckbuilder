@@ -8,7 +8,7 @@ import {
 let n = 0
 const card = (over: Partial<Card>): Card => ({
   'card-id': String(n++), name: 'Card', type: 'Character', side: 'L',
-  'set-code': 'ANH', number: n, rarity: 'C', ...over,
+  'set-code': 'ANH', number: n, rarity: 'C', 'is-supported': true, ...over,
 })
 
 const cards = [
@@ -16,6 +16,7 @@ const cards = [
   card({ name: 'Vader', side: 'D', cost: 9, power: 8, text: 'Critical Hit', classification: 'WOTC, REB, EP456', rarity: 'R' }),
   card({ name: 'X-wing', type: 'Space', side: 'L', 'set-code': 'ESB', cost: 3, power: -1, subtype: 'Rebel Starfighter', classification: 'WOTC, REB' }),
   card({ name: 'Mission A', type: 'Mission', side: 'N', 'set-code': 'ESB', cost: null }),
+  card({ name: 'Unsupported Thing', side: 'D', 'is-supported': false }),
 ]
 const f = (over: Partial<Filters>): Filters => ({ ...EMPTY_FILTERS, ...over })
 const names = (fs: Filters) => applyFilters(cards, fs).map((c) => c.name)
@@ -25,9 +26,10 @@ describe('filters', () => {
     expect(names(f({ sides: ['L', 'D'] }))).toEqual(['Luke', 'Vader', 'X-wing'])
     expect(names(f({ sides: ['L', 'D'], types: ['Space'] }))).toEqual(['X-wing'])
   })
-  it('searches name and text', () => {
+  it('searches name, text, and subtype', () => {
     expect(names(f({ q: 'vader' }))).toEqual(['Vader'])
     expect(names(f({ q: 'pilot' }))).toEqual(['Luke'])
+    expect(names(f({ q: 'starfighter' }))).toEqual(['X-wing'])
   })
   it('matches keywords on word boundaries and tags', () => {
     expect(names(f({ keywords: ['Evade'] }))).toEqual(['Luke'])
@@ -39,6 +41,10 @@ describe('filters', () => {
   })
   it('filters subtype by substring', () => {
     expect(names(f({ subtype: 'starfighter' }))).toEqual(['X-wing'])
+  })
+  it('hides unsupported cards by default, shows them with supportedOnly off', () => {
+    expect(names(EMPTY_FILTERS)).not.toContain('Unsupported Thing')
+    expect(names(f({ supportedOnly: false }))).toContain('Unsupported Thing')
   })
   it('sorts by cost with unknown cost last', () => {
     expect(names(f({ sort: 'cost' }))).toEqual(['X-wing', 'Luke', 'Vader', 'Mission A'])
@@ -53,6 +59,11 @@ describe('filters', () => {
     expect(parseFilters(serializeFilters(fs))).toEqual(fs)
     expect(serializeFilters(EMPTY_FILTERS).toString()).toBe('')
   })
+  it('only round-trips supportedOnly through the URL when turned off', () => {
+    const fs = f({ supportedOnly: false })
+    expect(serializeFilters(fs).toString()).toBe('all=1')
+    expect(parseFilters(serializeFilters(fs))).toEqual(fs)
+  })
   it('ignores junk URL values', () => {
     const p = new URLSearchParams('side=L,X&type=Bogus&sort=nope&cost=abc')
     expect(parseFilters(p)).toEqual({ ...EMPTY_FILTERS, sides: ['L'] })
@@ -62,5 +73,12 @@ describe('filters', () => {
     const active = activeFilters(fs)
     expect(active.map((a) => a.label)).toEqual(['Light', 'Cost 2–…'])
     expect(active[0].remove(fs).sides).toEqual([])
+  })
+  it('lists an active filter for supportedOnly only when turned off', () => {
+    expect(activeFilters(EMPTY_FILTERS)).toEqual([])
+    const fs = f({ supportedOnly: false })
+    const active = activeFilters(fs)
+    expect(active.map((a) => a.label)).toEqual(['Including unsupported'])
+    expect(active[0].remove(fs).supportedOnly).toBe(true)
   })
 })

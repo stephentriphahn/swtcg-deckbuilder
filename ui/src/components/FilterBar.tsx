@@ -59,13 +59,22 @@ export function FilterBar({
           type="search"
           value={filters.q}
           onChange={(e) => set({ q: e.target.value })}
-          placeholder="Search name or card text…"
+          placeholder="Search name, text, or subtype…"
           aria-label="Search cards"
           className="w-56 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm placeholder:text-slate-500 focus:border-sky-400 focus:outline-none"
         />
         {/* Side is small (3 chips) and common enough to stay visible; Type (7), Set (10) and
             Rarity (4) would crowd the bar, so they stay in the Filters panel below. */}
         {group('Side', 'sides', SIDES, filters.sides, 'sides', (v) => SIDE_LABELS[v])}
+        <label className="flex items-center gap-1.5 text-sm text-slate-400">
+          <input
+            type="checkbox"
+            checked={filters.supportedOnly}
+            onChange={(e) => set({ supportedOnly: e.target.checked })}
+            className="h-4 w-4 rounded border-slate-700 bg-slate-900 accent-sky-500"
+          />
+          Supported only
+        </label>
         <div className="ml-auto flex items-center gap-3">
           <label className="flex items-center gap-2 text-sm text-slate-400">
             Sort

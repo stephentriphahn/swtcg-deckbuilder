@@ -76,17 +76,23 @@
   [row]
   (some-> row (update :card-ids json/parse-string)))
 
+(defn- card->response
+  "SQLite has no real boolean type - is_supported comes back from the driver as a
+  Long 0/1, so it's coerced to a true boolean here before it reaches the API."
+  [row]
+  (some-> row (update :is-supported #(= 1 %))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; API
 
 (defn- list-cards*
   [db opts]
-  (search-cards db opts))
+  (mapv card->response (search-cards db opts)))
 
 (defrecord SqliteCardDatabase [db]
   db/CardDatabase
   (get-card-by-id [this id]
-    (get-card-by-id db {:card-id id}))
+    (card->response (get-card-by-id db {:card-id id})))
   (list-cards [this opts]
     (list-cards* db opts))
 

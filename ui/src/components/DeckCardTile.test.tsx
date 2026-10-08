@@ -6,6 +6,7 @@ import { DeckCardTile } from './DeckCardTile'
 
 const card: Card = {
   'card-id': 'a', name: 'Vader', type: 'Character', side: 'D', 'set-code': 'ANH', number: 1, rarity: 'C',
+  'is-supported': true,
 }
 
 const setup = (props: Partial<React.ComponentProps<typeof DeckCardTile>> = {}) => {

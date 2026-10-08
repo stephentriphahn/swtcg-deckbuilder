@@ -51,4 +51,11 @@ describe('FilterBar', () => {
     fireEvent.keyDown(screen.getByLabelText('cost min'), { key: 'Escape' })
     expect(screen.queryByLabelText('cost min')).toBeNull()
   })
+  it('defaults the supported-only toggle to checked, and unchecking it updates filters', () => {
+    const onChange = setup()
+    const toggle = screen.getByRole('checkbox', { name: 'Supported only' })
+    expect(toggle).toBeChecked()
+    fireEvent.click(toggle)
+    expect(onChange).toHaveBeenCalledWith({ ...EMPTY_FILTERS, supportedOnly: false })
+  })
 })

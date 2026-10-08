@@ -11,6 +11,12 @@ SELECT * FROM cards WHERE card_id = :card-id;
 -- :name get-all-loaded-sets :? :*
 SELECT DISTINCT set_code from cards;
 
+-- :name reset-all-supported! :! :n
+UPDATE cards SET is_supported = 0;
+
+-- :name mark-cards-supported! :! :n
+UPDATE cards SET is_supported = 1 WHERE card_id IN (:v*:card-ids);
+
 -- :name get-card-by-name :? :1
 SELECT * FROM cards WHERE name = :name;
 
@@ -40,7 +46,7 @@ SELECT * FROM cards
                               (str (name field) " = :" (name field))))
                       
                       (:search params)
-                      (conj "(name LIKE '%' || :search || '%' OR text LIKE '%' || :search || '%')"))]
+                      (conj "(name LIKE '%' || :search || '%' OR text LIKE '%' || :search || '%' OR subtype LIKE '%' || :search || '%')"))]
   (when (seq where-clauses)
     (str "WHERE " (s/join " AND " where-clauses))))
 ~*/

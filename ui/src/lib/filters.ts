@@ -47,12 +47,14 @@ export interface Filters {
   cost: Range
   power: Range
   health: Range
+  /** Hide cards the engine can't fully play yet. On by default - see `matches`. */
+  supportedOnly: boolean
   sort: SortKey
 }
 
 export const EMPTY_FILTERS: Filters = {
   q: '', sides: [], types: [], sets: [], rarities: [], tags: [], keywords: [], subtype: '',
-  cost: {}, power: {}, health: {}, sort: 'set',
+  cost: {}, power: {}, health: {}, supportedOnly: true, sort: 'set',
 }
 
 /** Facets that are multi-select chips: OR within a facet, AND across facets. */
@@ -94,6 +96,7 @@ const inRange = (value: number | null | undefined, { min, max }: Range): boolean
 
 /** `skip` leaves one facet out, used to count how many results each of its chips would give. */
 export function matches(card: Card, f: Filters, skip?: FacetKey): boolean {
+  if (f.supportedOnly && !card['is-supported']) return false
   if (skip !== 'sides' && f.sides.length && !f.sides.includes(card.side)) return false
   if (skip !== 'types' && f.types.length && !f.types.includes(card.type)) return false
   if (skip !== 'sets' && f.sets.length && !f.sets.includes(card['set-code'])) return false
@@ -104,7 +107,12 @@ export function matches(card: Card, f: Filters, skip?: FacetKey): boolean {
   if (f.subtype && !(card.subtype ?? '').toLowerCase().includes(f.subtype.toLowerCase())) return false
   if (f.q) {
     const q = f.q.toLowerCase()
-    if (!card.name.toLowerCase().includes(q) && !(card.text ?? '').toLowerCase().includes(q)) return false
+    if (
+      !card.name.toLowerCase().includes(q) &&
+      !(card.text ?? '').toLowerCase().includes(q) &&
+      !(card.subtype ?? '').toLowerCase().includes(q)
+    )
+      return false
   }
   return STAT_KEYS.every((k) => inRange(card[k], f[k]))
 }
@@ -178,6 +186,8 @@ export function parseFilters(p: URLSearchParams): Filters {
     cost: parseRange(p.get('cost')),
     power: parseRange(p.get('power')),
     health: parseRange(p.get('health')),
+    // Default is true; "all=1" is the non-default case, so that's what's worth carrying in the URL.
+    supportedOnly: p.get('all') !== '1',
     sort: SORTS.some((s) => s.key === sort) ? (sort as SortKey) : 'set',
   }
 }
@@ -198,6 +208,7 @@ export function serializeFilters(f: Filters): URLSearchParams {
   put('kw', f.keywords)
   put('subtype', f.subtype)
   for (const k of STAT_KEYS) if (hasRange(f[k])) p.set(k, formatRange(f[k]))
+  if (!f.supportedOnly) p.set('all', '1')
   if (f.sort !== 'set') p.set('sort', f.sort)
   return p
 }
@@ -229,6 +240,12 @@ export function activeFilters(f: Filters): ActiveFilter[] {
     out.push({ id: `kw:${v}`, label: v, remove: (x) => ({ ...x, keywords: without(x.keywords, v) }) }))
   if (f.subtype)
     out.push({ id: 'subtype', label: `Subtype: ${f.subtype}`, remove: (x) => ({ ...x, subtype: '' }) })
+  if (!f.supportedOnly)
+    out.push({
+      id: 'supportedOnly',
+      label: 'Including unsupported',
+      remove: (x) => ({ ...x, supportedOnly: true }),
+    })
   for (const k of STAT_KEYS) {
     const { min, max } = f[k]
     if (min != null || max != null)

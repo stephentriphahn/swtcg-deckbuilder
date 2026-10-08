@@ -6,7 +6,7 @@ import { CardTile } from './CardTile'
 
 const portrait: Card = {
   'card-id': 'a', name: 'Luke', type: 'Character', side: 'L', 'set-code': 'ANH', number: 1, rarity: 'C',
-  'image-file': 'luke',
+  'image-file': 'luke', 'is-supported': true,
 }
 const landscape: Card = { ...portrait, 'card-id': 'b', name: 'Battle Fatigue', type: 'Battle' }
 

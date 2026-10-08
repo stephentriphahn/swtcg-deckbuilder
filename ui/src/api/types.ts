@@ -30,6 +30,8 @@ export interface Card {
   classification?: string | null
   /** Bare basename, no path or extension. */
   'image-file'?: string | null
+  /** Whether every printed keyword/ability on this card is implemented by swtcg-game-engine. */
+  'is-supported': boolean
 }
 
 export interface DeckSummary {
